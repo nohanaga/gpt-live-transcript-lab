@@ -1,0 +1,14 @@
+{
+  "name": "gpt-live-transcript-lab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-grouper.mjs",
+    "pretest": "npm run build",
+    "test": "node --test tests/grouper.test.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  }
+}

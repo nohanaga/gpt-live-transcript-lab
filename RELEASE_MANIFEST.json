@@ -1,0 +1,308 @@
+{
+  "name": "gpt-live-transcript-lab",
+  "version": "0.1.0",
+  "generated_utc": "2026-09-28T10:53:16.5343554Z",
+  "application_license": "Not specified",
+  "tests_run_by_packaging": false,
+  "upstream": {
+    "openai_node": "5d258e4e82d7655fa82a4688fc04c53359417d27",
+    "openai_cookbook": "5986832a554169dc87285b1b0b396941f235a62e"
+  },
+  "files": [
+    {
+      "path": ".env.example",
+      "bytes": 899,
+      "sha256": "bd8bc435ea78483da0724ef5077c99cf285bf913ad9be09a914726568d3b245b"
+    },
+    {
+      "path": ".gitattributes",
+      "bytes": 241,
+      "sha256": "475d468dc8912d0d1d907c7a3982cfeeed2954079ab466b098cde1ca22527d7e"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 225,
+      "sha256": "98a0ee809983fa939263c033570bfa0c0f44d847533556ff001ae547878e02b7"
+    },
+    {
+      "path": "app.py",
+      "bytes": 16346,
+      "sha256": "dc364d3578347506d6d109fbd628bcc6023acd776b4c3d67501c2f70de5775fe"
+    },
+    {
+      "path": "docs/usage.md",
+      "bytes": 50090,
+      "sha256": "5dcfcdbd7402511fdbb2c6054aa87981722df8e8e45cd05022b848090f6765aa"
+    },
+    {
+      "path": "frontend/grouper-entry.ts",
+      "bytes": 91,
+      "sha256": "4ad830b1754b58c401a5f059a7a7b46d8fb132296471e047fe5c0b0a13add673"
+    },
+    {
+      "path": "lab/__init__.py",
+      "bytes": 52,
+      "sha256": "36f6dabfac07e2db0ec354fa8a02018afa81b19b712b6edfbe93466e9b49130a"
+    },
+    {
+      "path": "lab/backend.py",
+      "bytes": 10349,
+      "sha256": "afbfd5cb1c4f3d82af15051f9c95a714b458561270497f1b0432acbb78dff35c"
+    },
+    {
+      "path": "lab/execution.py",
+      "bytes": 22267,
+      "sha256": "4e3f4ccf7df60374c947a63308d7cc5f7935d217c558234ab635298666b883f2"
+    },
+    {
+      "path": "lab/jev.py",
+      "bytes": 16068,
+      "sha256": "e82c4e43f963a920548cac3d7bb1fd22647579b812b8f6871231f5483544f89d"
+    },
+    {
+      "path": "lab/provider.py",
+      "bytes": 3763,
+      "sha256": "61dbbeb10d5b7322a569f49510ea66807ad7120053ebadb3dc0515287e0e376a"
+    },
+    {
+      "path": "lab/state.py",
+      "bytes": 15221,
+      "sha256": "1b9a31a1a589ca9ba9897a873d966cabc423447ecdf162ff49e4aedcc34b28a4"
+    },
+    {
+      "path": "lab/timing.py",
+      "bytes": 1488,
+      "sha256": "617e28a0abd9b2f5c6a0f7eb09ff32c9f558b4ded56e95c2004106deff69785a"
+    },
+    {
+      "path": "lab/upstream.py",
+      "bytes": 1615,
+      "sha256": "21a49a5263a014a2505e2bc620cbd196079038fa8004e30cd09e7653f2c1de9e"
+    },
+    {
+      "path": "lab/weather.py",
+      "bytes": 20136,
+      "sha256": "77fae129b7adef78fab514f125fb4e747eeed197c475c92a574042fcad33494b"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 13397,
+      "sha256": "15234849424139470131a81784e693ca3a98aba6a4dfd2e5848008bf09f13cd0"
+    },
+    {
+      "path": "package.json",
+      "bytes": 302,
+      "sha256": "9bc6aea6aa5ff41bd5e646d5914893f2f7ae2f194732a47bc50b42ba5cae8aa1"
+    },
+    {
+      "path": "pyproject.toml",
+      "bytes": 462,
+      "sha256": "303bd84979e6ffb6f07ebc4842b39a1ef8fa292fcc16fdaa1df71abd161bdb11"
+    },
+    {
+      "path": "README.md",
+      "bytes": 5586,
+      "sha256": "e5ea1ab67edb993ad513a0d8168884dd12be1f42556331a63ee50c2750b64116"
+    },
+    {
+      "path": "requirements.txt",
+      "bytes": 682,
+      "sha256": "287a2b2cc1499f6f09258e2fc52044c35461cca2554047d5963a946af631bdf2"
+    },
+    {
+      "path": "scripts/build-grouper.mjs",
+      "bytes": 832,
+      "sha256": "27376725433194af83afbea52e4f0254ea669ff27719b021c543ef1d601de6de"
+    },
+    {
+      "path": "scripts/prepare-delivery.ps1",
+      "bytes": 3267,
+      "sha256": "e87e4be6f392bea7b440738e46e900324b78280d3fdf31804535ac6e82294a5e"
+    },
+    {
+      "path": "SECURITY.md",
+      "bytes": 6934,
+      "sha256": "cdd39bfdc9f07271e312bad467e3544152072b6d79e60fb118684518b4b565b5"
+    },
+    {
+      "path": "static/app.js",
+      "bytes": 53998,
+      "sha256": "33ea06b1b89db25294cc0997245ef3615869280fb0478e6aa90b5f5e21619d7b"
+    },
+    {
+      "path": "static/audio-waveform.js",
+      "bytes": 5055,
+      "sha256": "210e625c8ab367a13ebe22d51e9a353fd892bf3620fee16bbcc50bef7b14b7d1"
+    },
+    {
+      "path": "static/grouper-trace.js",
+      "bytes": 1843,
+      "sha256": "14f7ae257897093cc4d5b32161ccbf2189b67557e20f0a3dc57d20fb772c36f9"
+    },
+    {
+      "path": "static/index.html",
+      "bytes": 35262,
+      "sha256": "d4028e5f0df9bedc482462efacf71de581beaf00d0c2f8d84644dec464ce15ea"
+    },
+    {
+      "path": "static/lab-model.js",
+      "bytes": 3573,
+      "sha256": "e9ee7ce1e9e1f43fc3cbc8654a7342c2da3c67c47b6d4feed93d12a49dd3d898"
+    },
+    {
+      "path": "static/scenarios.js",
+      "bytes": 5613,
+      "sha256": "d150388b236ac7228ed54c0bf65be2e9f2d52622c062ea23be601e49df86026b"
+    },
+    {
+      "path": "static/styles.css",
+      "bytes": 43620,
+      "sha256": "adc17aab53f0f8700f3d245a5cdfce434897f2f9e3db2cb108c8b2cd2170988f"
+    },
+    {
+      "path": "static/theme.css",
+      "bytes": 10241,
+      "sha256": "1da003e605b4e66601f03715181b0ebd314fc18eedd9753f2b0bf6a2ff585604"
+    },
+    {
+      "path": "static/theme.js",
+      "bytes": 2240,
+      "sha256": "21c82a1bcc912971b31cc0b05a7b0b27db000f791c69ea0d1149d4a1fefe1fbb"
+    },
+    {
+      "path": "static/trace-model.js",
+      "bytes": 23215,
+      "sha256": "3feed2e1ff8c429c19ea2714b4e9b2aeba849282ba7809688718a547ce8c7446"
+    },
+    {
+      "path": "static/trace-view.js",
+      "bytes": 50690,
+      "sha256": "000baf1d07ba925253cae5749f297a606760b32d9502f4a689547a954cfc3344"
+    },
+    {
+      "path": "static/vendor/grouper.js",
+      "bytes": 22863,
+      "sha256": "aa2bffbf63912130f0b8d6d9cb982dc741fae0990bd7207c9b0abc3a6095fdfa"
+    },
+    {
+      "path": "static/vendor/LICENSE.openai-node",
+      "bytes": 11336,
+      "sha256": "636eb7d79da9bb6d515a4b3fd417aa26679eb3cf16396ddab4bc55fa74e616e4"
+    },
+    {
+      "path": "static/waveform-processor.js",
+      "bytes": 1327,
+      "sha256": "c4701fae8618e2e5b4f5b8e77d399be2e11e676eed59234e323c0a689413aaea"
+    },
+    {
+      "path": "tests/__init__.py",
+      "bytes": 65,
+      "sha256": "d70a4d24305ccc0682b0d568df8921cfe8b671e2d39a719570e488d5400ae127"
+    },
+    {
+      "path": "tests/grouper.test.mjs",
+      "bytes": 54528,
+      "sha256": "ca2b9467bfb9704c55365c1fee3ceaa035a6bc92779baad50c2ac4b8f01efe9a"
+    },
+    {
+      "path": "tests/test_app.py",
+      "bytes": 15802,
+      "sha256": "29fc23d8dbe3d81a00e99c599eb70f18c1228504451b161bff52e7edbce76385"
+    },
+    {
+      "path": "tests/test_backend.py",
+      "bytes": 7025,
+      "sha256": "93b0cb0a436f4ece45756178584cda4d7647715fecfae7ef4763b9d71c367b84"
+    },
+    {
+      "path": "tests/test_execution_transport.py",
+      "bytes": 10350,
+      "sha256": "85ca7278c5643b48570427465f7e3572a633fd80a08c65f0b40540fe96cc921c"
+    },
+    {
+      "path": "tests/test_execution.py",
+      "bytes": 11429,
+      "sha256": "05c575567817d30d2e76c78ee2756f465331d1dde07a0671e104abebf24be078"
+    },
+    {
+      "path": "tests/test_jev.py",
+      "bytes": 24805,
+      "sha256": "f1a42957d78d9d77e36baa865dd53d667a05e71a7e2a439fc3a413f9e5500920"
+    },
+    {
+      "path": "tests/test_lab.py",
+      "bytes": 7364,
+      "sha256": "a02ccd1bc8885143596b6a7aae16cc8e86490ee9a9fd8ee814ac5c16b5b36d97"
+    },
+    {
+      "path": "tests/test_provider.py",
+      "bytes": 7679,
+      "sha256": "78be498859cad8c21fc1bd0c5cbdc4f8c1a69124cdc28afbfb0ef47f98781b2e"
+    },
+    {
+      "path": "tests/test_upstream.py",
+      "bytes": 2579,
+      "sha256": "5d558fd40410c6e4cfe03e93138c5603236ba30bf0bad40bb7d8cf6bffddacba"
+    },
+    {
+      "path": "tests/test_weather.py",
+      "bytes": 24796,
+      "sha256": "717508866f0d818486f9bdaac1cd2cb96ad5c65a1425705ddbfaecb333f89885"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "bytes": 2642,
+      "sha256": "815f579bfd90e0b3014509a28e93e841f4347c3935fbc7f70ed69a8dbdcf29f9"
+    },
+    {
+      "path": "vendor/__init__.py",
+      "bytes": 59,
+      "sha256": "a24ffd915d3664397de861bd42e50d9d1ede7ab80816ec222a8dac177c4f5b66"
+    },
+    {
+      "path": "vendor/openai_cookbook/__init__.py",
+      "bytes": 54,
+      "sha256": "667fe572a8d86e4bde112fbc19d3bb6620923d7a828a8132468b69677b1ade45"
+    },
+    {
+      "path": "vendor/openai_cookbook/LICENSE",
+      "bytes": 1063,
+      "sha256": "13df7812ca53ecaae1cb4a868844bb598373047ae1d580e4debfbef1dd5b6915"
+    },
+    {
+      "path": "vendor/openai_cookbook/memory.py",
+      "bytes": 6955,
+      "sha256": "99b05c4b2f9ebd4ad7016af07a9804185501bc25bece4a6fe3bcdcf7dfe3de30"
+    },
+    {
+      "path": "vendor/openai-node/LICENSE",
+      "bytes": 11336,
+      "sha256": "636eb7d79da9bb6d515a4b3fd417aa26679eb3cf16396ddab4bc55fa74e616e4"
+    },
+    {
+      "path": "vendor/openai-node/src/core/error.ts",
+      "bytes": 6082,
+      "sha256": "aea17690aeb31b3e46fa79f04d43c448134416a2f416d97e0f5d3accc0742257"
+    },
+    {
+      "path": "vendor/openai-node/src/core/EventEmitter.ts",
+      "bytes": 10700,
+      "sha256": "87bf2085c56dccf74f41f78e8d4af4af0a98ed2f5cfb768855eacaf1a77e2830"
+    },
+    {
+      "path": "vendor/openai-node/src/internal/errors.ts",
+      "bytes": 1171,
+      "sha256": "612ac2a985e5f6a4ae03c254d76be7de4dd43ae83a802d187097d18403c1c08f"
+    },
+    {
+      "path": "vendor/openai-node/src/lib/live/transcript-grouper.ts",
+      "bytes": 12400,
+      "sha256": "0a9adf2c23e08b0a1dae8f573796817e3cd25135e9e35dd4d6187e867b5a1430"
+    },
+    {
+      "path": "vendor/openai-node/src/lib/live/transcript-grouping.ts",
+      "bytes": 12292,
+      "sha256": "032e262e83b6d5e217567c2e38bd20e8b9a74f041983b5b78abee220ba26a1fa"
+    }
+  ]
+}

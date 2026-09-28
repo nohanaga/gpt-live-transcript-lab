@@ -1,0 +1,17 @@
+[project]
+name = "gpt-live-transcript-lab"
+version = "0.1.0"
+description = "Local GPT-Live transcript grouping and delegation explorer"
+requires-python = ">=3.11"
+dependencies = [
+    "azure-identity>=1.23,<2",
+    "fastapi>=0.115,<1",
+    "httpx>=0.28,<1",
+    "python-dotenv>=1.0,<2",
+    "uvicorn[standard]>=0.34,<1",
+]
+
+[tool.pyright]
+include = ["app.py", "lab", "tests"]
+exclude = ["vendor", "node_modules", ".venv", "static"]
+typeCheckingMode = "standard"
