@@ -40,6 +40,15 @@ INSTRUCTIONS = (
     "including that the lookup was performed and that the weather is a model estimate. "
     "If the backend reports failure, missing information, or disabled execution, explain that honestly. "
     "Do not treat receipt of a delegation as proof of execution."
+    "\n\n# 日本語の読み方\n"
+    "日本語の標準的な読み方で、自然に話してください。\n"
+    "次の語を発話するときは、指定した読みを使ってください。\n"
+    "- 小雨：こさめ\n"
+    "- 霧雨：きりさめ\n"
+    "天気検索の結果に漢字で書かれていても、上記の読みで発話してください。\n"
+    "読み仮名を説明したり、漢字と読みを繰り返したりせず、"
+    "通常の返答の中で正しい読みを使ってください。\n"
+    "この指定は発音に関するものです。天気の内容は確認済みの検索結果に従ってください。"
 )
 logger = logging.getLogger("transcript_lab")
 

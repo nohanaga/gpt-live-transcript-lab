@@ -5,6 +5,11 @@
   --theme-button-bg: #fff;
   --theme-button-hover: #f1edfc;
 }
+.component-live.lane-live_output .gantt-bar:is(.status-ok, .status-running) {
+  color: var(--purple);
+  background-color: var(--purple-light);
+  border-color: var(--waveform-output);
+}
 .topbar-actions { display: flex; align-items: center; gap: 20px; }
 .theme-toggle {
   display: grid; place-items: center; flex: none; width: 44px; height: 44px;
