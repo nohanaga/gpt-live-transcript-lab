@@ -12,6 +12,7 @@ from uuid import uuid4
 
 from lab.state import TranscriptLab
 from lab.backend import BackendError, run_backend, validate_call
+from lab.i18n import text
 from lab.jev import run_jev
 from lab.weather import WeatherInputError, WeatherServiceError, search_weather_for_city
 
@@ -147,9 +148,15 @@ class DelegationExecutor:
                 call["input_srt"] = handoff["srt"]
                 try:
                     if "USER:" not in handoff["srt"]:
-                        raise WeatherInputError("新しい発話がまだ届いていません。都市名と天気の依頼をもう一度お話しください。")
+                        raise WeatherInputError(text(
+                            "新しい発話がまだ届いていません。都市名と天気の依頼をもう一度お話しください。",
+                            "No new speech has arrived yet. Please say the city name and weather request again.",
+                        ))
                     if len(context.encode("utf-8")) > 256_000:
-                        raise WeatherInputError("会話が長すぎます。記録を保存し、セッションをリセットしてください。")
+                        raise WeatherInputError(text(
+                            "会話が長すぎます。記録を保存し、セッションをリセットしてください。",
+                            "The conversation is too long. Save the recording and reset the session.",
+                        ))
                     async with asyncio.timeout(90):
                         if backend_mode == "jev":
                             content = await run_jev(context, backend_stage, current_srt=handoff["srt"])
@@ -158,7 +165,10 @@ class DelegationExecutor:
                     handoff["backend"]["status"] = "completed"
                 except (WeatherInputError, BackendError, TimeoutError) as error:
                     content = error.spoken if isinstance(error, BackendError) else (
-                        str(error) or "バックエンド処理がタイムアウトしました。結果の回答は完了していません。"
+                        str(error) or text(
+                            "バックエンド処理がタイムアウトしました。結果の回答は完了していません。",
+                            "The backend processing timed out. The answer with the result was not completed.",
+                        )
                     )
                     handoff["error"] = str(error) or content
                     handoff["backend"].update(status="failed", error=handoff["error"])
@@ -190,7 +200,10 @@ class DelegationExecutor:
             # Keep background exceptions visible, but never leak credentials or
             # arbitrary upstream bodies into the browser or a spoken response.
             logger.exception("Delegation worker failed")
-            handoff.update(status="failed", error="バックエンド処理が失敗しました。サーバーログを確認してください。")
+            handoff.update(status="failed", error=text(
+                "バックエンド処理が失敗しました。サーバーログを確認してください。",
+                "The backend processing failed. Check the server log.",
+            ))
             if call["status"] != "succeeded":
                 call["status"] = "failed"
             await stage("backend_failed", error=handoff["error"])
@@ -257,7 +270,10 @@ class ResponsesExecutor:
             for item in self.lab.handoffs:
                 if item.get("backend_mode") == "responses" and item["status"] not in {"completed", "cancelled", "failed"}:
                     if not command_id or any(record["event"]["event_id"] == command_id for record in item["commands"]):
-                        await self._fail(item, "Live API が Responses の処理エラーを通知しました。")
+                        await self._fail(item, text(
+                            "Live API が Responses の処理エラーを通知しました。",
+                            "The Live API reported a Responses processing error.",
+                        ))
             return
         identifier = event.get("delegation_id")
         if kind == "session.delegation.created":
@@ -293,22 +309,34 @@ class ResponsesExecutor:
                 if isinstance(call_id, str) and call_id:
                     self.calls[identifier].setdefault(call_id, {**item, "response_id": response_id})
                 else:
-                    await self._fail(handoff, "call_id のない関数要求を拒否しました。")
+                    await self._fail(handoff, text(
+                        "call_id のない関数要求を拒否しました。",
+                        "Rejected a function request without a call_id.",
+                    ))
         elif nested_type in {"response.failed", "response.cancelled", "response.incomplete", "error"}:
-            await self._fail(handoff, f"Responses の処理が終了しました: {nested_type}")
+            await self._fail(handoff, text(
+                f"Responses の処理が終了しました: {nested_type}",
+                f"Responses processing ended: {nested_type}",
+            ))
         elif nested_type == "response.completed":
             key = (identifier, response_id)
             if key in self.completed:
                 return
             self.completed.add(key)
             if response.get("status", "completed") != "completed":
-                await self._fail(handoff, "Responses が正常完了していません。")
+                await self._fail(handoff, text(
+                    "Responses が正常完了していません。",
+                    "Responses did not complete successfully.",
+                ))
                 return
             for item in response.get("output", []):
                 if isinstance(item, dict) and item.get("type") == "function_call":
                     call_id = item.get("call_id")
                     if not isinstance(call_id, str) or not call_id:
-                        await self._fail(handoff, "call_id のない関数要求を拒否しました。")
+                        await self._fail(handoff, text(
+                            "call_id のない関数要求を拒否しました。",
+                            "Rejected a function request without a call_id.",
+                        ))
                         return
                     self.calls[identifier].setdefault(call_id, {**item, "response_id": response_id})
             pending = [item for item in self.calls[identifier].values()
@@ -337,11 +365,17 @@ class ResponsesExecutor:
                 await asyncio.Future()
         except TimeoutError:
             if handoff["status"] not in {"completed", "failed", "cancelled"}:
-                await self._fail(handoff, "Responses の完了を 90 秒以内に確認できませんでした。")
+                await self._fail(handoff, text(
+                    "Responses の完了を 90 秒以内に確認できませんでした。",
+                    "Could not confirm Responses completion within 90 seconds.",
+                ))
 
     async def _send(self, handoff: dict[str, Any], command: dict[str, Any]) -> None:
         if self.stopped or self.lab.closed or handoff["status"] in {"failed", "cancelled"}:
-            raise BackendError("セッション終了または中断のため送信しません。")
+            raise BackendError(text(
+                "セッション終了または中断のため送信しません。",
+                "Not sent because the session ended or was interrupted.",
+            ))
         event_id = f"responses_{uuid4().hex}"
         command["event_id"] = event_id
         record = {"event": command, "status": "pending"}
@@ -353,7 +387,10 @@ class ResponsesExecutor:
             await self.emit({"type": "command", "event": command, "protocol": "responses",
                              "delegation_id": handoff["id"]})
             if not await asyncio.wait_for(future, 10):
-                raise BackendError("関数結果または続行要求を送信できませんでした。")
+                raise BackendError(text(
+                    "関数結果または続行要求を送信できませんでした。",
+                    "Could not send the function result or the continuation request.",
+                ))
         finally:
             self.deliveries.pop(event_id, None)
             if record["status"] == "pending":
@@ -362,7 +399,10 @@ class ResponsesExecutor:
     async def _execute(self, handoff: dict[str, Any], calls: list[dict[str, Any]]) -> None:
         try:
             if len(handoff["function_calls"]) + len(calls) > 4:
-                raise BackendError("1 委譲あたりの関数要求数の上限を超えました。")
+                raise BackendError(text(
+                    "1 委譲あたりの関数要求数の上限を超えました。",
+                    "Exceeded the maximum number of function requests per delegation.",
+                ))
             for item in calls:
                 if self.stopped or self.lab.closed or handoff["status"] in {"failed", "cancelled"}:
                     return
@@ -376,9 +416,15 @@ class ResponsesExecutor:
                     await self._stage(handoff, "function_requested", call_id=call["id"],
                                       function_name=call["name"], arguments=arguments)
                     if self.lab.snapshot()["playground"] is None:
-                        raise WeatherInputError("天気検索は OFF です。検索は実行していません。")
+                        raise WeatherInputError(text(
+                            "天気検索は OFF です。検索は実行していません。",
+                            "Weather search is OFF. No search was performed.",
+                        ))
                     if any(previous["status"] == "succeeded" for previous in handoff["function_calls"]):
-                        raise WeatherInputError("この委譲の天気検索は実行済みです。追加検索は実行しません。")
+                        raise WeatherInputError(text(
+                            "この委譲の天気検索は実行済みです。追加検索は実行しません。",
+                            "The weather search for this delegation has already run. No additional search will be performed.",
+                        ))
                     handoff["status"] = call["status"] = "executing"
                     await self._stage(handoff, "function_started", call_id=call["id"],
                                       function_name=call["name"], arguments=arguments)
@@ -387,12 +433,18 @@ class ResponsesExecutor:
                     call.update(status="succeeded", result=result)
                     await self._stage(handoff, "function_completed", call_id=call["id"], result=result)
                 except (BackendError, WeatherInputError, WeatherServiceError, TimeoutError) as error:
-                    result = {"status": "error", "error": str(error) or "天気検索がタイムアウトしました。"}
+                    result = {"status": "error", "error": str(error) or text(
+                        "天気検索がタイムアウトしました。",
+                        "The weather search timed out.",
+                    )}
                     call.update(status="failed", result=result)
                     await self._stage(handoff, "function_failed", call_id=call["id"], error=result["error"])
                 output = json.dumps(result, ensure_ascii=False)
                 if len(output.encode("utf-8")) > 24_000:
-                    output = json.dumps({"status": "error", "error": "関数結果のサイズ上限を超えました。"}, ensure_ascii=False)
+                    output = json.dumps({"status": "error", "error": text(
+                        "関数結果のサイズ上限を超えました。",
+                        "The function result exceeded the size limit.",
+                    )}, ensure_ascii=False)
                 if handoff["status"] in {"failed", "cancelled"}:
                     return
                 handoff["status"] = "sending_results"
@@ -407,4 +459,7 @@ class ResponsesExecutor:
             raise
         except Exception as error:
             await self._fail(handoff, str(error) if isinstance(error, BackendError)
-                             else "Responses の関数実行または結果送信に失敗しました。")
+                             else text(
+                                 "Responses の関数実行または結果送信に失敗しました。",
+                                 "Responses function execution or result submission failed.",
+                             ))

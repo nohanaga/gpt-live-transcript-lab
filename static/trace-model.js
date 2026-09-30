@@ -1,4 +1,5 @@
 import { WaveformHistory } from './audio-waveform.js';
+import { t } from './i18n.js';
 
 export const LANES = Object.freeze({
   live_session: 'Session lifecycle',
@@ -24,19 +25,19 @@ export const LANES = Object.freeze({
   ledger: 'Python Ledger',
   ledger_text: 'Ledger transcript / full snapshots',
   delegation: 'Delegation / consume',
-  backend_context: 'Ledger → バックエンド',
-  backend_request: '後段へ送信した Ledger / HTTP 入力',
-  backend_model: '判断モデルの推論',
-  backend_response: 'モデル応答 / 関数要求・回答',
-  backend_tools: '実行する関数 / 検証済み引数',
-  jev_decision: 'Jev の選択・確率・信頼度',
-  function_call: '実関数の実行',
-  function_result: '実行結果 / 失敗',
-  backend_reply: 'LIVE への返送内容（送信前）',
-  responses_model: 'Responses / 応答待機',
-  responses_command: '関数結果送信 / 明示的続行',
-  responses_result: 'Responses / 完了・失敗',
-  responses_handoff: 'Responses / 委譲状態',
+  backend_context: t('Ledger → バックエンド'),
+  backend_request: t('後段へ送信した Ledger / HTTP 入力'),
+  backend_model: t('判断モデルの推論'),
+  backend_response: t('モデル応答 / 関数要求・回答'),
+  backend_tools: t('実行する関数 / 検証済み引数'),
+  jev_decision: t('Jev の選択・確率・信頼度'),
+  function_call: t('実関数の実行'),
+  function_result: t('実行結果 / 失敗'),
+  backend_reply: t('LIVE への返送内容（送信前）'),
+  responses_model: t('Responses / 応答待機'),
+  responses_command: t('関数結果送信 / 明示的続行'),
+  responses_result: t('Responses / 完了・失敗'),
+  responses_handoff: t('Responses / 委譲状態'),
   handoff: 'Handoff / delivery state',
   command: 'Outgoing commands',
   ui: 'UI render',
@@ -61,7 +62,7 @@ export const TRACE_COMPONENTS = Object.freeze({
     sourceTime: true,
   },
   backend: {
-    label: '判断モデル / 実関数',
+    label: t('判断モデル / 実関数'),
     lanes: ['backend_context', 'backend_model', 'backend_response',
       'responses_model', 'responses_command', 'responses_result', 'responses_handoff',
       'jev_decision', 'backend_tools', 'function_call', 'function_result', 'backend_reply'],
@@ -80,21 +81,21 @@ export const LANE_COMPONENTS = Object.freeze(Object.fromEntries(
 ));
 
 export const FUNCTION_FLOW_GROUPS = [
-  { label: '1 · Ledger の元発話', key: 'live', lanes: ['live_input'] },
-  { label: '2 · Client delegation / Ledger 消費', key: 'ledger', lanes: ['live_delegation', 'delegation'] },
-  { label: '3 · Ledger 準備 / モデルへの送信', key: 'ledger', lanes: ['backend_context', 'backend_request'] },
-  { label: '4 · モデル実行 / 応答 / 判断・引数検証', key: 'backend', lanes: ['backend_model', 'backend_response', 'jev_decision', 'backend_tools'] },
-  { label: '5 · 実関数 / 取得結果', key: 'backend', lanes: ['function_call', 'function_result'] },
-  { label: '6 · LIVE 返送 / 受理・失敗', key: 'app', lanes: ['backend_reply', 'command', 'handoff', 'live_context', 'live_error', 'error'] },
-  { label: '参照 · ID で関連付いた音声イベント', key: 'live', lanes: ['live_output', 'live_audio', 'audio'] },
+  { label: t('1 · Ledger の元発話'), key: 'live', lanes: ['live_input'] },
+  { label: t('2 · Client delegation / Ledger 消費'), key: 'ledger', lanes: ['live_delegation', 'delegation'] },
+  { label: t('3 · Ledger 準備 / モデルへの送信'), key: 'ledger', lanes: ['backend_context', 'backend_request'] },
+  { label: t('4 · モデル実行 / 応答 / 判断・引数検証'), key: 'backend', lanes: ['backend_model', 'backend_response', 'jev_decision', 'backend_tools'] },
+  { label: t('5 · 実関数 / 取得結果'), key: 'backend', lanes: ['function_call', 'function_result'] },
+  { label: t('6 · LIVE 返送 / 受理・失敗'), key: 'app', lanes: ['backend_reply', 'command', 'handoff', 'live_context', 'live_error', 'error'] },
+  { label: t('参照 · ID で関連付いた音声イベント'), key: 'live', lanes: ['live_output', 'live_audio', 'audio'] },
 ];
 export const RESPONSES_FLOW_GROUPS = [
-  { label: '1 · 音声会話 / RAW transcript', key: 'live', lanes: ['live_input', 'live_output'] },
+  { label: t('1 · 音声会話 / RAW transcript'), key: 'live', lanes: ['live_input', 'live_output'] },
   { label: '2 · Responses delegation', key: 'live', lanes: ['live_delegation', 'responses_handoff'] },
-  { label: '3 · Responses イベント / 関数要求', key: 'backend', lanes: ['live_response', 'responses_model', 'backend_tools'] },
-  { label: '4 · アプリの関数実行 / 取得結果', key: 'backend', lanes: ['function_call', 'function_result'] },
-  { label: '5 · 関数結果送信 / 処理再開', key: 'app', lanes: ['responses_command', 'command'] },
-  { label: '6 · Responses 完了 / Live 自動注入', key: 'backend', lanes: ['responses_result', 'live_error', 'error'] },
+  { label: t('3 · Responses イベント / 関数要求'), key: 'backend', lanes: ['live_response', 'responses_model', 'backend_tools'] },
+  { label: t('4 · アプリの関数実行 / 取得結果'), key: 'backend', lanes: ['function_call', 'function_result'] },
+  { label: t('5 · 関数結果送信 / 処理再開'), key: 'app', lanes: ['responses_command', 'command'] },
+  { label: t('6 · Responses 完了 / Live 自動注入'), key: 'backend', lanes: ['responses_result', 'live_error', 'error'] },
 ];
 const FLOW_LANES = new Set([...FUNCTION_FLOW_GROUPS, ...RESPONSES_FLOW_GROUPS].flatMap((group) => group.lanes));
 const CLIENT_ONLY_LANES = new Set(['ledger', 'ledger_text', 'delegation', 'backend_context',
@@ -170,7 +171,7 @@ export function liveEventPresentation(event) {
 function ledgerPresentation(kind, caption, srt) {
   const cues = srt.split(/\r?\n\r?\n(?=(?:\d+\r?\n)?\d{2,}:\d{2}:\d{2},\d{3} --> )/);
   const latest = cues.at(-1).replace(/^(?:\d+\r?\n)?\d{2,}:\d{2}:\d{2},\d{3} --> \d{2,}:\d{2}:\d{2},\d{3}\r?\n/, '');
-  return { kind, caption, text: srt, role: 'BACKEND', preview: `末尾の発話: ${latest}` };
+  return { kind, caption, text: srt, role: 'BACKEND', preview: t('末尾の発話: {0}', latest) };
 }
 
 export function transcriptPresentation(span) {
@@ -178,80 +179,80 @@ export function transcriptPresentation(span) {
   if (['live_input', 'live_output'].includes(span.lane) && typeof event?.delta === 'string') {
     return {
       kind: 'raw', role: span.lane === 'live_input' ? 'USER' : 'ASSISTANT',
-      caption: 'RAW 差分', text: event.delta,
+      caption: t('RAW 差分'), text: event.delta,
     };
   }
   if (['grouper_text', 'segment'].includes(span.lane) && typeof segment?.text === 'string') {
     return {
       kind: 'grouper', role: segment.speaker.toUpperCase(), text: segment.text,
-      caption: `Grouper 全文 / ${span.label.startsWith('segment.closed') ? '閉鎖' : '更新'}`,
+      caption: t('Grouper 全文 / {0}', span.label.startsWith('segment.closed') ? t('閉鎖') : t('更新')),
     };
   }
   if (span.lane === 'ledger_text' && typeof ledger?.text === 'string') {
     return {
       kind: 'ledger', role: ledger.role, text: ledger.text,
-      caption: `Ledger 全文 / ${{
-        created: '追加', text_updated: '更新', consumed: '消費', metadata_updated: '状態更新',
-      }[change]}`,
+      caption: t('Ledger 全文 / {0}', {
+        created: t('追加'), text_updated: t('更新'), consumed: t('消費'), metadata_updated: t('状態更新'),
+      }[change]),
     };
   }
   const detail = span.detail;
   const text = (kind, caption, value, role = 'BACKEND') => ({ kind, caption, text: value, role });
   if (span.lane === 'live_response') {
     const nested = event?.event;
-    if (nested?.type === 'response.output_text.delta') return text('model_response', 'Responses 回答差分', nested.delta);
-    if (nested?.item?.type === 'function_call') return text('function_arguments', 'Responses の関数要求', JSON.stringify(nested.item, null, 2));
+    if (nested?.type === 'response.output_text.delta') return text('model_response', t('Responses 回答差分'), nested.delta);
+    if (nested?.item?.type === 'function_call') return text('function_arguments', t('Responses の関数要求'), JSON.stringify(nested.item, null, 2));
   }
   if (span.lane === 'responses_command') {
-    return text('function_result', detail.command?.type === 'response.create' ? 'Responses 続行要求' : 'Responses へ返す関数結果',
+    return text('function_result', detail.command?.type === 'response.create' ? t('Responses 続行要求') : t('Responses へ返す関数結果'),
       JSON.stringify(detail.command, null, 2), 'APP');
   }
   if (span.lane === 'responses_result' && detail.response) {
-    return text('model_response', 'Responses 完了イベント', JSON.stringify(detail.response, null, 2));
+    return text('model_response', t('Responses 完了イベント'), JSON.stringify(detail.response, null, 2));
   }
   if (span.lane === 'backend_context' && typeof detail.backend_context === 'string') {
-    return ledgerPresentation('ledger_context', 'Ledger 準備 / 累積 SRT（未送信）', detail.backend_context);
+    return ledgerPresentation('ledger_context', t('Ledger 準備 / 累積 SRT（未送信）'), detail.backend_context);
   }
   if (span.lane === 'backend_request') {
     if (typeof detail.ledger_srt === 'string') {
-      return ledgerPresentation('ledger_input', `↑ 後段へ送信開始 / round ${detail.model_round}`, detail.ledger_srt);
+      return ledgerPresentation('ledger_input', t('↑ 後段へ送信開始 / round {0}', detail.model_round), detail.ledger_srt);
     }
     const input = detail.request_body?.input ?? detail.input_items;
     if (Array.isArray(input)) {
-      return text('model_input', '↑ 後段へ送信開始 / SRT を含む入力', JSON.stringify(input, null, 2));
+      return text('model_input', t('↑ 後段へ送信開始 / SRT を含む入力'), JSON.stringify(input, null, 2));
     }
   }
   if (span.lane === 'backend_response') {
     if (detail.function_calls?.length) {
-      return text('model_response', `モデル応答 / function_call / round ${detail.model_round}`, JSON.stringify(detail.function_calls, null, 2));
+      return text('model_response', t('モデル応答 / function_call / round {0}', detail.model_round), JSON.stringify(detail.function_calls, null, 2));
     }
     if (typeof detail.output_text === 'string') {
-      return text('model_response', `モデルの回答 / round ${detail.model_round}`, detail.output_text);
+      return text('model_response', t('モデルの回答 / round {0}', detail.model_round), detail.output_text);
     }
   }
   if (span.lane === 'backend_tools' && detail.arguments) {
-    return text('function_arguments', `検証済み引数 / ${detail.function_name}`, JSON.stringify(detail.arguments, null, 2));
+    return text('function_arguments', t('検証済み引数 / {0}', detail.function_name), JSON.stringify(detail.arguments, null, 2));
   }
   if (span.lane === 'jev_decision' && detail.decision) {
     const { choice, confidence, threshold, approved, probabilities } = detail.decision;
-    return text('jev_decision', `Jev 判定 / ${approved ? '実行可' : '実行しない'}`,
-      `選択: ${choice}\n信頼度: ${confidence} / 閾値: ${threshold}\n`
+    return text('jev_decision', t('Jev 判定 / {0}', approved ? t('実行可') : t('実行しない')),
+      t('選択: {0}\n信頼度: {1} / 閾値: {2}\n', choice, confidence, threshold)
       + Object.entries(probabilities).sort((a, b) => b[1] - a[1])
         .map(([option, probability]) => `${option}: ${(probability * 100).toFixed(1)}%`).join('\n'));
   }
   if (span.lane === 'function_result') {
     const result = detail.tool_output ?? detail.result ?? detail.error;
-    if (result !== undefined) return text('function_result', detail.tool_output ? '関数結果 → モデル' : '実関数の結果',
+    if (result !== undefined) return text('function_result', detail.tool_output ? t('関数結果 → モデル') : t('実関数の結果'),
       typeof result === 'string' ? result : JSON.stringify(result, null, 2));
   }
   if (span.lane === 'backend_reply' && typeof detail.command?.content === 'string') {
-    return text('live_reply', 'LIVE への返送内容（送信前）', detail.command.content);
+    return text('live_reply', t('LIVE への返送内容（送信前）'), detail.command.content);
   }
   if (span.lane === 'backend_reply' && typeof detail.content === 'string') {
-    return text('live_reply', 'コードによる結果整形 / 追加推論なし', detail.content);
+    return text('live_reply', t('コードによる結果整形 / 追加推論なし'), detail.content);
   }
   if (span.lane === 'command' && event?.type === 'session.commentary.append' && typeof event.content === 'string') {
-    return text('live_reply', span.status === 'not_sent' ? 'LIVE 未送信' : 'LIVE へ送信 / ACK は別途確認', event.content, 'APP');
+    return text('live_reply', span.status === 'not_sent' ? t('LIVE 未送信') : t('LIVE へ送信 / ACK は別途確認'), event.content, 'APP');
   }
   return null;
 }

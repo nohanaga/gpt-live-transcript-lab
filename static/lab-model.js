@@ -1,3 +1,5 @@
+import { t } from './i18n.js';
+
 export const DEFAULT_OPTIONS = Object.freeze({
   minTurnSeparationMs: 500,
   assistantSilenceMs: 2000,
@@ -17,7 +19,7 @@ export function createEventAdapter() {
   let sequence = 0;
   return (event) => {
     if (!event || typeof event !== 'object' || typeof event.type !== 'string') {
-      throw new Error('イベントには文字列の type が必要です。');
+      throw new Error(t('イベントには文字列の type が必要です。'));
     }
     if (GROUPER_TYPES.has(event.type) && event.type !== 'session.closed' && event.event_id == null) {
       return { ...event, event_id: `${prefix}_${++sequence}`, _lab_generated_event_id: true };
@@ -31,7 +33,7 @@ export function resolveOptions(values) {
   for (const key of Object.keys(DEFAULT_OPTIONS).filter((key) => key !== 'additionalAcknowledgments')) {
     const value = Number(resolved[key]);
     if (!Number.isFinite(value) || value < 0 || value > 2_147_483_647) {
-      throw new Error(`${key}: 0 ～ 2147483647 ms を入力してください。`);
+      throw new Error(t('{0}: 0 ～ 2147483647 ms を入力してください。', key));
     }
     resolved[key] = value;
   }
@@ -86,7 +88,7 @@ export function waitForIce(peer, signal, timeoutMs = 10_000) {
     };
     const timer = setTimeout(() => {
       cleanup();
-      reject(new Error('ICE 候補の収集がタイムアウトしました。ネットワークを確認してください。'));
+      reject(new Error(t('ICE 候補の収集がタイムアウトしました。ネットワークを確認してください。')));
     }, timeoutMs);
     peer.addEventListener('icegatheringstatechange', changed);
     signal?.addEventListener('abort', aborted, { once: true });

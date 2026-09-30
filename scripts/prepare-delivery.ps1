@@ -19,8 +19,8 @@ if (Test-Path -LiteralPath $destination) {
 $relativeFiles = @(
     '.env.example', '.gitattributes', '.gitignore', 'app.py',
     'package.json', 'package-lock.json', 'pyproject.toml', 'requirements.txt',
-    'README.md', 'SECURITY.md', 'THIRD_PARTY_NOTICES.md',
-    'docs/usage.md',
+    'README.md', 'README.en.md', 'SECURITY.md', 'SECURITY.en.md', 'THIRD_PARTY_NOTICES.md',
+    'docs/usage.md', 'docs/usage.en.md',
     'scripts/build-grouper.mjs', 'scripts/prepare-delivery.ps1'
 )
 $sourceGroups = [ordered]@{

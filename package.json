@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node scripts/build-grouper.mjs",
     "pretest": "npm run build",
-    "test": "node --test tests/grouper.test.mjs"
+    "test": "node --test tests/grouper.test.mjs tests/i18n.test.mjs"
   },
   "devDependencies": {
     "esbuild": "0.25.12"

@@ -1,6 +1,11 @@
 # GPT-Live Transcript Lab
 
+**日本語** | [English](README.en.md)
+
 `gpt-live-1` の会話処理と天気検索の実行経路を可視化する、ローカル専用の Python Web UI です。
+画面と扱う会話は、日本語と英語を切り替えられます。
+
+![](docs\images\gui.gif)
 
 ## 機能概要
 
@@ -8,6 +13,7 @@
 - Client delegation / Responses delegation の切替と、方式ごとの処理タイムライン。
 - TranscriptGrouper、Client モードの TranscriptLedger、音声波形の表示。
 - Function Calling / Jev 判断による天気検索と、記録の JSON 保存。Jev は Client モード専用です。
+- 日本語 / 英語の表示切り替え。音声指示・判断モデルへの指示・リプレイの会話・天気の要約も切り替わります。
 
 ## 起動
 
@@ -34,6 +40,14 @@ python3 -m venv .venv
 
 **API なしで試す場合**：Client delegation を選び、「関数実行プレイグラウンド」の「天気検索を実行する」を OFF にしてから「リプレイ」を選びます。
 ON のままでは、リプレイでも判断 API の料金が発生し得ます。
+
+## 表示言語
+
+右上の **English** / **日本語** ボタン、または **http://localhost:8765/?lang=en** で切り替えます。
+選択はブラウザーに保存し、未選択の場合はブラウザーの言語設定（`ja` なら日本語、それ以外は英語）に従います。
+切り替えるとページを再読み込みし、保存していない記録は失われます。ライブ接続中は切り替えられません。
+英語モードでは AI が英語で話し、"What's the weather in Tokyo right now?" のような英語の依頼を受け付けます。
+詳しくは [表示言語](docs/usage.md#表示言語)を参照してください。
 
 ## 委譲モード
 
@@ -74,8 +88,8 @@ Responses モードのモデルを省略した場合、Azure では `AZURE_OPENA
 | パス | 役割 |
 | --- | --- |
 | [app.py](app.py) | HTTP / WebSocket サーバー、音声セッションの作成 |
-| [lab/](lab/) | 会話状態、認証、判断モデル、天気検索 |
-| [static/](static/) | ブラウザー UI とビルド済みバンドル |
+| [lab/](lab/) | 会話状態、認証、判断モデル、天気検索、表示言語 |
+| [static/](static/) | ブラウザー UI、英訳辞書、ビルド済みバンドル |
 | [frontend/](frontend/)・[scripts/](scripts/) | バンドルの入口、ビルド・配布処理 |
 | [vendor/](vendor/) | 公式ヘルパーの固定版とライセンス |
 | [tests/](tests/) | Python / Node.js のテスト |

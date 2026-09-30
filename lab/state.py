@@ -8,6 +8,7 @@ from typing import Any
 from uuid import uuid4
 
 from vendor.openai_cookbook.memory import TranscriptLedger
+from lab.i18n import current_language, text
 from lab.timing import OperationTrace
 
 MAX_EVENTS = 5_000
@@ -16,12 +17,20 @@ TRANSCRIPT_TYPES = {
     "session.input_transcript.delta",
     "session.output_transcript.delta",
 }
-STUB_RESULT = (
+_STUB_RESULT_TEMPLATE = (
     "This is a transcript inspection demo. The backend received the delegation, "
     "but no lookup, decision, or external action was performed. "
-    "Jev is not connected. Tell the user briefly in Japanese that this is a demo "
+    "Jev is not connected. Tell the user briefly in {language} that this is a demo "
     "and no action has been executed."
 )
+STUB_RESULT = _STUB_RESULT_TEMPLATE.format(language="Japanese")
+STUB_RESULT_EN = _STUB_RESULT_TEMPLATE.format(language="English")
+
+
+def stub_result() -> str:
+    """The fixed stub commentary for the current language."""
+    return STUB_RESULT_EN if current_language() == "en" else STUB_RESULT
+
 def validate_playground_config(config: object) -> dict[str, Any] | None:
     if config is None:
         return None
@@ -31,7 +40,10 @@ def validate_playground_config(config: object) -> dict[str, Any] | None:
         or config.get("function_name") != "search_weather"
         or config.get("backend", "azure") not in ("azure", "jev")
     ):
-        raise ValueError("実行可能な関数は search_weather、判断モードは azure または jev です。模擬の引数・戻り値は指定できません。")
+        raise ValueError(text(
+            "実行可能な関数は search_weather、判断モードは azure または jev です。模擬の引数・戻り値は指定できません。",
+            "The only executable function is search_weather, and the decision mode is azure or jev. Simulated arguments or return values cannot be specified.",
+        ))
     return dict(config)
 
 
@@ -81,7 +93,10 @@ def validate_event(event: object) -> dict[str, Any]:
 class TranscriptLab:
     def __init__(self, delegation_mode: str = "client") -> None:
         if delegation_mode not in {"client", "responses"}:
-            raise ValueError("委譲モードは client または responses です。")
+            raise ValueError(text(
+                "委譲モードは client または responses です。",
+                "The delegation mode must be client or responses.",
+            ))
         self.delegation_mode = delegation_mode
         self.operations = OperationTrace()
         self.ledger = TranscriptLedger() if delegation_mode == "client" else None
@@ -97,14 +112,20 @@ class TranscriptLab:
 
     def configure_playground(self, config: object) -> None:
         if self.closed:
-            raise ValueError("セッションは終了しています。リセットしてください。")
+            raise ValueError(text("セッションは終了しています。リセットしてください。", "The session has ended. Please reset."))
         resolved = validate_playground_config(config)
         if self.delegation_mode == "responses" and resolved and resolved.get("backend", "azure") != "azure":
-            raise ValueError("Responses delegation の判断方式は Function Calling です。")
+            raise ValueError(text(
+                "Responses delegation の判断方式は Function Calling です。",
+                "Responses delegation uses Function Calling as its decision method.",
+            ))
         if resolved is not None and resolved != self._playground and any(
             item["status"] in {"queued", "awaiting_transcript", "executing"} for item in self.handoffs
         ):
-            raise ValueError("実行中は判断モードを変更できません。完了を待つか、天気検索を OFF にしてください。")
+            raise ValueError(text(
+                "実行中は判断モードを変更できません。完了を待つか、天気検索を OFF にしてください。",
+                "The decision mode cannot be changed while running. Wait for completion or turn weather search OFF.",
+            ))
         self._playground = resolved
         if resolved is None:
             self._trace("lab.playground", "disabled", "Playground cleared; delegation now returns the fixed stub.")
@@ -143,7 +164,10 @@ class TranscriptLab:
 
     def consume_transcript(self) -> tuple[str, list[str]]:
         if self.ledger is None:
-            raise ValueError("Responses delegation では Ledger を使用しません。")
+            raise ValueError(text(
+                "Responses delegation では Ledger を使用しません。",
+                "Responses delegation does not use the Ledger.",
+            ))
         srt = self.ledger.consume_srt()
         event_ids = self._pending_transcript_event_ids
         self._pending_transcript_event_ids = []
@@ -211,7 +235,7 @@ class TranscriptLab:
                         "type": "session.commentary.append",
                         "event_id": f"stub_{len(self.handoffs) + 1}",
                         "delegation_id": identifier,
-                        "content": STUB_RESULT,
+                        "content": stub_result(),
                     }
             self.handoffs.append(
                 {

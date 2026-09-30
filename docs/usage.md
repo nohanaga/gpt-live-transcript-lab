@@ -1,5 +1,7 @@
 # 操作ガイドと詳細仕様
 
+**日本語** | [English](usage.en.md)
+
 構築・起動手順とファイル構成は [README](../README.md) を参照してください。
 
 `gpt-live-1` の transcript 処理を観察する、ローカル専用の Python Web UI です。
@@ -13,6 +15,24 @@ Jev 方式の回答は実結果からコードで整形し、追加の回答生�
 
 **同じイベントを並行処理するのは Grouper と Ledger です。Function Calling と Jev は委譲ごとに一方を選びます。**
 Responses モードでは Grouper のみを使用し、Ledger は生成・記録・消費しません。
+
+## 表示言語
+
+画面は日本語（原文）と英語に対応します。右上のテーマボタンの隣にある **English** / **日本語** ボタンで切り替えます。
+ボタンには、切り替え先の言語名をその言語で表示します。
+
+- 選択はブラウザー（`localStorage`）に保存します。`http://localhost:8765/?lang=en` や `?lang=ja` で開いても指定できます。
+  保存した選択がない場合はブラウザーの言語設定に従い、`ja` なら日本語、それ以外なら英語で表示します。
+- ページが送るサーバー側の処理も言語に従うため、切り替えるとページを再読み込みします。
+  **保存していない記録は失われます。** イベントを記録済みの場合は確認を表示します。必要な記録は先に JSON 保存してください。
+  ライブ接続中はボタンを無効にします。
+- 言語に従うもの：画面の文言、リプレイのシナリオ、Live 音声指示の既定値、判断モデル・Jev への指示、
+  Live に返す確認文・エラー文、天気の要約、関数引数の都市名（`東京` / `Tokyo`）、Jev の候補 ID
+  （`weather_東京_current` / `weather_Tokyo_current`）、SRT ヘルパー `search_weather()` が解釈する文型。
+- 言語に従わないもの：API の生イベント、ID、サーバーログ、一部の接続先のエラー文はそのまま表示します。
+  JSON 保存には、記録時の言語の文言が含まれます。
+- ブラウザーは `GET /api/config` と観察用 WebSocket `/ws` にクエリ `lang`、`POST /api/session` の本文に `language` を付けます。
+  サーバーは要求・WebSocket 接続ごとに言語を保持します（`lab/i18n.py`）。
 
 ## 委譲モード
 
@@ -195,7 +215,7 @@ Function Calling 方式の利用先は Azure OpenAI Responses API です。
   `0.75` は設定値であり、天気検索で実測・最適化した値ではありません。
   確認待ち操作を「はい」だけで承認する仕組みは追加していません。都市と現在の天気を明示して依頼してください。
 - **実行**：選択候補からコードで都市と `current` を確定し、既存の天気関数を呼びます。
-  取得結果の日本語 `summary` を Live に返し、`function_call_output` や 2 回目の推論は生成しません。
+  取得結果の `summary`（表示言語で作成）を Live に返し、`function_call_output` や 2 回目の推論は生成しません。
   失敗時は成功として返さず、エラーを記録して伝えます。
 - **表示**：「判断モデル / 実関数」の「Jev の選択・確率・信頼度」レーンで判定を選ぶと、
   右サイドバーに選択結果、実行可否、閾値、全候補の確率を表示します。
@@ -481,7 +501,7 @@ flowchart TD
     J --> V
     V -->|"実行可能"| W["既存の天気関数 / Open-Meteo"]
     W -->|"Function Calling 方式"| R["function_call_output / モデルの回答作成"]
-    W -->|"Jev 判断方式"| S["実結果の日本語 summary"]
+    W -->|"Jev 判断方式"| S["実結果の summary（表示言語）"]
     V -->|"確認が必要"| N["検索せず説明"]
     R --> O["session.commentary.append / 同じ delegation_id"]
     S --> O
@@ -531,7 +551,14 @@ Azure / OpenAI の接続先・認証ヘッダーと認証失敗もモックで�
 ネットワーク接続を保証するものではありません。実マイクでの有料疎通は別途必要です。
 
 Node.js は公式 TypeScript ヘルパーの再バンドルとテスト時だけ必要です。開発時は Node.js 22 以降を推奨します。
-`npm test` の `pretest` でも再ビルドします。Python の許容範囲は [pyproject.toml](../pyproject.toml)、
+`npm test` の `pretest` でも再ビルドし、`tests/grouper.test.mjs` と `tests/i18n.test.mjs` を実行します。
+
+画面の文言は日本語で書き、[static/i18n.js](../static/i18n.js) の `t()` で囲みます。`index.html` の固定文言は読み込み時に翻訳します。
+文言を追加・変更したときは、日本語の文字列そのものをキーとして [static/i18n-en.js](../static/i18n-en.js) に英訳を追加してください
+（`{0}`、`{1}` などは差し込み位置です）。英訳の欠落や `t()` で囲んでいない日本語があると `tests/i18n.test.mjs` が失敗します。
+サーバー側の文言は [lab/i18n.py](../lab/i18n.py) の `text(ja, en)` で切り替え、英語モードは `tests/test_i18n.py` と `tests/test_weather_en.py` で検証します。
+
+Python の許容範囲は [pyproject.toml](../pyproject.toml)、
 固定バージョンは [requirements.txt](../requirements.txt)、npm の固定解決結果は [package-lock.json](../package-lock.json)にあります。
 Windows / PyPy では `uvloop` をインストール対象から外します。根拠：[Uvicorn の依存定義](https://github.com/Kludex/uvicorn/blob/main/pyproject.toml)。
 

@@ -6,7 +6,6 @@ import json
 import logging
 from pathlib import Path
 from typing import Annotated, Literal
-from copy import deepcopy
 
 import httpx
 from azure.core.exceptions import ClientAuthenticationError
@@ -22,9 +21,10 @@ from starlette.responses import Response
 from lab.provider import BackendSettings, LiveSettings
 from lab.state import MAX_EVENTS, MAX_FRAME_BYTES, TranscriptLab, validate_playground_config
 from lab.execution import DelegationExecutor, ResponsesExecutor
-from lab.backend import INSTRUCTIONS as BACKEND_INSTRUCTIONS, WEATHER_TOOL
+from lab.backend import instructions as backend_instructions, weather_tool
+from lab.i18n import Language, set_language, use_language
 from lab.jev import JevSettings
-from lab.weather import SUPPORTED_CITIES
+from lab.weather import supported_cities
 from lab.timing import OperationTrace
 from lab.upstream import session_error_detail
 
@@ -40,6 +40,7 @@ INSTRUCTIONS = (
     "including that the lookup was performed and that the weather is a model estimate. "
     "If the backend reports failure, missing information, or disabled execution, explain that honestly. "
     "Do not treat receipt of a delegation as proof of execution."
+    # Pronunciation guide for Japanese weather terms (Japanese sessions only).
     "\n\n# 日本語の読み方\n"
     "日本語の標準的な読み方で、自然に話してください。\n"
     "次の語を発話するときは、指定した読みを使ってください。\n"
@@ -50,6 +51,22 @@ INSTRUCTIONS = (
     "通常の返答の中で正しい読みを使ってください。\n"
     "この指定は発音に関するものです。天気の内容は確認済みの検索結果に従ってください。"
 )
+INSTRUCTIONS_EN = (
+    "Speak English, naturally and briefly. Explain that you are an AI voice. "
+    "Delegate requests requiring information lookup or actions to the configured backend. "
+    "The application can execute search_weather to retrieve current weather estimates. "
+    "Delegate weather requests, including corrections, rather than answering from memory. "
+    "Wait for the backend result before claiming success. Speak the confirmed result in English, "
+    "including that the lookup was performed and that the weather is a model estimate. "
+    "If the backend reports failure, missing information, or disabled execution, explain that honestly. "
+    "Do not treat receipt of a delegation as proof of execution."
+)
+
+
+def voice_instructions(language: Language) -> str:
+    """Default GPT-Live session instructions for the UI language."""
+    return INSTRUCTIONS_EN if language == "en" else INSTRUCTIONS
+
 logger = logging.getLogger("transcript_lab")
 
 app = FastAPI(title="GPT-Live Transcript Lab", docs_url=None, redoc_url=None)
@@ -80,9 +97,11 @@ async def session_timings(request: Request, call_next: RequestResponseEndpoint) 
 class SessionOffer(BaseModel):
     model_config = ConfigDict(extra="forbid")
     delegation_mode: Literal["client", "responses"] = "client"
+    language: Language = "ja"
     sdp: str = Field(min_length=1, max_length=60_000)
-    instructions: Annotated[str, StringConstraints(strip_whitespace=True)] = Field(
-        default=INSTRUCTIONS, min_length=1, max_length=4_000
+    # When omitted, the default instructions for `language` are used.
+    instructions: Annotated[str, StringConstraints(strip_whitespace=True)] | None = Field(
+        default=None, min_length=1, max_length=4_000
     )
 
     @field_validator("sdp")
@@ -104,7 +123,12 @@ async def index() -> FileResponse:
 
 
 @app.get("/api/config")
-async def config() -> dict[str, object]:
+async def config(lang: str = "ja") -> dict[str, object]:
+    with use_language(lang) as language:
+        return _config(language)
+
+
+def _config(language: Language) -> dict[str, object]:
     try:
         backend = BackendSettings.from_env()
         backend_config = {"backend_model": backend.model, "backend_available": True}
@@ -130,9 +154,10 @@ async def config() -> dict[str, object]:
             "live_available": False,
             "config_error": str(error),
             "model": MODEL,
-            "instructions": INSTRUCTIONS,
+            "language": language,
+            "instructions": voice_instructions(language),
             "max_events": MAX_EVENTS,
-            "weather_cities": list(SUPPORTED_CITIES),
+            "weather_cities": list(supported_cities()),
             "playground_protocol": 5,
             "backends": backends,
             **backend_config,
@@ -143,9 +168,10 @@ async def config() -> dict[str, object]:
         "provider": settings.provider,
         "auth_mode": settings.auth_mode,
         "model": settings.model,
-        "instructions": INSTRUCTIONS,
+        "language": language,
+        "instructions": voice_instructions(language),
         "max_events": MAX_EVENTS,
-        "weather_cities": list(SUPPORTED_CITIES),
+        "weather_cities": list(supported_cities()),
         "playground_protocol": 5,
         "backends": backends,
         **backend_config,
@@ -183,19 +209,21 @@ async def create_session(request: Request) -> dict[str, object]:
             "Cognitive Services OpenAI User access to this resource, or set AZURE_OPENAI_API_KEY.",
         ) from error
     delegation: dict[str, object] = {"type": offer.delegation_mode}
+    instructions = offer.instructions or voice_instructions(offer.language)
     if offer.delegation_mode == "responses":
         try:
             responses_model = settings.responses_model
         except ValueError as error:
             raise HTTPException(422, str(error)) from error
-        delegation["responses"] = {
-            "model": responses_model, "instructions": BACKEND_INSTRUCTIONS,
-            "tools": [deepcopy(WEATHER_TOOL)], "tool_choice": "auto", "parallel_tool_calls": False,
-        }
+        with use_language(offer.language):
+            delegation["responses"] = {
+                "model": responses_model, "instructions": backend_instructions(),
+                "tools": [weather_tool()], "tool_choice": "auto", "parallel_tool_calls": False,
+            }
     payload = {
         "session": {
             "model": settings.model,
-            "instructions": offer.instructions,
+            "instructions": instructions,
             "delegation": delegation,
         },
         "transport": {"type": "webrtc", "sdp": offer.sdp},
@@ -221,7 +249,7 @@ async def create_session(request: Request) -> dict[str, object]:
             sensitive_values=(
                 *headers.values(),
                 *(value.removeprefix("Bearer ") for value in headers.values()),
-                offer.instructions,
+                instructions,
                 offer.sdp,
                 *offer.sdp.splitlines(),
                 *(
@@ -263,6 +291,8 @@ async def inspect_session(socket: WebSocket) -> None:
         await socket.close(code=1008, reason="Unexpected origin")
         return
     await socket.accept()
+    # The UI language applies to this connection and every task it spawns (lab.i18n).
+    set_language(socket.query_params.get("lang"))
     lab = TranscriptLab()
     executor = DelegationExecutor(lab, socket.send_json)
     responses_executor = ResponsesExecutor(lab, socket.send_json)

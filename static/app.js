@@ -8,6 +8,10 @@ import { OperationTimeline, parseServerTiming, liveEventPresentation } from './t
 import { instrumentGrouper } from './grouper-trace.js';
 import { mountTimeline } from './trace-view.js';
 import { LiveWaveformCapture } from './audio-waveform.js';
+import { t, language, switchLanguage, translateDocument } from './i18n.js';
+
+// Translate the Japanese static markup before anything reads or extends the DOM.
+translateDocument();
 
 const $ = (id) => document.getElementById(id);
 const json = (value) => JSON.stringify(value, null, 2);
@@ -74,7 +78,7 @@ function options() {
 
 function updateMuteControl(muted) {
   const button = $('mute');
-  const label = muted ? 'マイクを再開' : 'マイクをミュート';
+  const label = muted ? t('マイクを再開') : t('マイクをミュート');
   button.setAttribute('aria-label', label);
   button.title = label;
   button.setAttribute('aria-pressed', String(muted));
@@ -131,7 +135,7 @@ function renderGrouper() {
     box.append(element('span', 'speaker-avatar', segment.speaker === 'user' ? 'U' : 'AI'), content);
     return box;
   });
-  $('segments').replaceChildren(...(bubbles.length ? bubbles : [element('p', 'empty-text', 'イベントを待っています。')]));
+  $('segments').replaceChildren(...(bubbles.length ? bubbles : [element('p', 'empty-text', t('イベントを待っています。'))]));
   $('update-count').textContent = String(updates.length);
   $('group-updates').replaceChildren(...updates.slice(-100).reverse().map((item) =>
     jsonDetails(`${item.type} · ${item.segment.id} ${item.reason ?? ''}`, item)));
@@ -149,21 +153,21 @@ const backendLabel = (backend) => backend === 'responses' ? 'Responses delegatio
 function renderBackendConfiguration() {
   const selected = responsesMode() ? 'responses' : $('playground-backend').value;
   const settings = config?.backends?.[selected];
-  $('playground-model').textContent = settings?.model ?? '設定を確認中';
-  $('playground-backend-status').textContent = !settings ? '設定を確認中'
-    : !settings.available ? `利用できません：${settings.error}`
-      : selected === 'jev' ? `Jev 設定済み · 実行閾値 ${settings.threshold}（天気検索での精度は未検証）`
-        : selected === 'responses' ? 'Responses delegation · ライブ接続'
-        : '利用 API：Azure OpenAI Responses API · 設定済み';
+  $('playground-model').textContent = settings?.model ?? t('設定を確認中');
+  $('playground-backend-status').textContent = !settings ? t('設定を確認中')
+    : !settings.available ? t('利用できません：{0}', settings.error)
+      : selected === 'jev' ? t('Jev 設定済み · 実行閾値 {0}（天気検索での精度は未検証）', settings.threshold)
+        : selected === 'responses' ? t('Responses delegation · ライブ接続')
+        : t('利用 API：Azure OpenAI Responses API · 設定済み');
   $('playground-backend-description').textContent = selected === 'jev'
-    ? 'Ledger の累積 SRT・今回消費した SRT と事前定義の選択肢を渡します。候補と信頼度を検証し、実行可能なら天気を取得します。結果はコードで日本語に整形し、2 回目のモデル呼び出しは行いません。低信頼度の場合は実行せず、都市と現在の天気を明示した依頼を求めます。'
-    : 'Azure OpenAI Responses API を通じて Ledger の SRT と関数の JSON Schema をモデルに渡します。モデルが生成した search_weather の引数を検証し、アプリが関数を実行します。実行結果をモデルに戻して回答を作ります。';
+    ? t('Ledger の累積 SRT・今回消費した SRT と事前定義の選択肢を渡します。候補と信頼度を検証し、実行可能なら天気を取得します。結果はコードで日本語に整形し、2 回目のモデル呼び出しは行いません。低信頼度の場合は実行せず、都市と現在の天気を明示した依頼を求めます。')
+    : t('Azure OpenAI Responses API を通じて Ledger の SRT と関数の JSON Schema をモデルに渡します。モデルが生成した search_weather の引数を検証し、アプリが関数を実行します。実行結果をモデルに戻して回答を作ります。');
   $('playground-data-notice').textContent = selected === 'jev'
-    ? '送信先：TypeSafe。今回までに消費した Ledger の会話文脈（USER / ASSISTANT）と選択肢を送信します。音声は Jev に送りません。Jev の認証情報はサーバー側の TYPESAFE_API_KEY で設定してください。参考サンプルの設定ファイルは読み込みません。'
-    : '送信先：設定した Azure OpenAI リソースの Responses API。今回までに消費した Ledger の会話文脈と関数定義を送信します。';
+    ? t('送信先：TypeSafe。今回までに消費した Ledger の会話文脈（USER / ASSISTANT）と選択肢を送信します。音声は Jev に送りません。Jev の認証情報はサーバー側の TYPESAFE_API_KEY で設定してください。参考サンプルの設定ファイルは読み込みません。')
+    : t('送信先：設定した Azure OpenAI リソースの Responses API。今回までに消費した Ledger の会話文脈と関数定義を送信します。');
   if (selected === 'responses') {
-    $('playground-backend-description').textContent = 'GPT-Live の会話文脈 → Function Calling → 天気関数';
-    $('playground-data-notice').textContent = `送信先：${config?.provider ?? ''} / ${settings?.model ?? ''}。Ledger は未使用。`;
+    $('playground-backend-description').textContent = t('GPT-Live の会話文脈 → Function Calling → 天気関数');
+    $('playground-data-notice').textContent = t('送信先：{0} / {1}。Ledger は未使用。', config?.provider ?? '', settings?.model ?? '');
   }
 }
 
@@ -179,9 +183,9 @@ function renderDelegationMode() {
     $('grouper-panel').hidden = false;
     $('ledger-panel').hidden = true;
   }
-  $('transcript-panels-title').textContent = responses ? 'Grouper の状態' : 'Grouper / Ledger の状態';
+  $('transcript-panels-title').textContent = responses ? t('Grouper の状態') : t('Grouper / Ledger の状態');
   $('workspace-title').textContent = $('transcript-panels-title').textContent;
-  $('handoffs-summary').textContent = responses ? '委譲・関数結果・Responses の状態' : '委譲・SRT・コマンド送信状態';
+  $('handoffs-summary').textContent = responses ? t('委譲・関数結果・Responses の状態') : t('委譲・SRT・コマンド送信状態');
   $('handoffs-title').textContent = $('handoffs-summary').textContent;
   traceView.setDelegationMode(responses ? 'responses' : 'client');
 }
@@ -192,25 +196,25 @@ function renderState() {
   const backend = responsesMode() ? 'responses' : state.playground?.backend ?? 'azure';
   const label = backendLabel(backend);
   const available = config?.backends?.[backend]?.available;
-  $('playground-badge').textContent = state.playground ? available ? '実行 ON' : '設定が必要' : '実行 OFF';
+  $('playground-badge').textContent = state.playground ? available ? t('実行 ON') : t('設定が必要') : t('実行 OFF');
   $('playground-status').textContent = state.playground
     ? available
-      ? backend === 'responses' ? '有効：Responses → 関数実行 → 結果送信 → 処理再開'
-        : `有効：Ledger → ${label} → ${backend === 'jev' ? '候補判定・信頼度検証' : 'Function Calling'} → 実関数 → 結果返却`
-      : `${label} の設定が未完了のため実行できません。上の設定状況を確認してください。`
-    : '無効：検索は実行しません。';
-  $('handoff-mode').textContent = `${mode === 'live' ? 'LIVE' : '音声なし'} / ${state.playground ? '実関数' : '実行 OFF'}`;
-  $('source-badge').textContent = mode === 'live' ? 'LIVE · 音声接続'
-    : state.playground ? `合成発話 · ${label} 推論 / Live 未送信` : 'REPLAY · 外部通信なし';
+      ? backend === 'responses' ? t('有効：Responses → 関数実行 → 結果送信 → 処理再開')
+        : t('有効：Ledger → {0} → {1} → 実関数 → 結果返却', label, backend === 'jev' ? t('候補判定・信頼度検証') : 'Function Calling')
+      : t('{0} の設定が未完了のため実行できません。上の設定状況を確認してください。', label)
+    : t('無効：検索は実行しません。');
+  $('handoff-mode').textContent = `${mode === 'live' ? 'LIVE' : t('音声なし')} / ${state.playground ? t('実関数') : t('実行 OFF')}`;
+  $('source-badge').textContent = mode === 'live' ? t('LIVE · 音声接続')
+    : state.playground ? t('合成発話 · {0} 推論 / Live 未送信', label) : t('REPLAY · 外部通信なし');
   const latest = state.handoffs.at(-1);
   if (mode === 'replay' && latest?.function_call && latest.status === 'not_sent') {
     $('playback-status').textContent = latest.backend?.status === 'failed'
-      ? '判断バックエンド失敗 · 詳細を確認してください / Live 未送信'
+      ? t('判断バックエンド失敗 · 詳細を確認してください / Live 未送信')
       : latest.function_call.status === 'not_called'
-        ? 'モデルからの確認回答 · 関数は未実行 / Live 未送信'
+        ? t('モデルからの確認回答 · 関数は未実行 / Live 未送信')
         : latest.function_call.status === 'succeeded'
-      ? '関数実行完了 · Live 未送信 / 音声なし'
-      : '関数実行失敗 · 詳細を確認してください / Live 未送信';
+      ? t('関数実行完了 · Live 未送信 / 音声なし')
+      : t('関数実行失敗 · 詳細を確認してください / Live 未送信');
   }
   for (const handoff of state.handoffs) {
     if (['cancelled', 'superseded'].includes(handoff.status)) {
@@ -251,7 +255,7 @@ function renderState() {
   }
   $('pending-count').textContent = String(state.ledger.reduce((total, row) => total + Array.from(row.pending_text).length, 0));
   $('handoff-count').textContent = String(state.handoffs.length);
-  $('pending-srt').textContent = state.pending_srt || '（未消費テキストなし）';
+  $('pending-srt').textContent = state.pending_srt || t('（未消費テキストなし）');
   const rows = state.ledger.slice(-200).map((row) => {
     const tr = element('tr');
     const who = element('td');
@@ -273,13 +277,13 @@ function renderState() {
     heading.append(element('strong', '', handoff.id),
       element('span', '', `offset ${sourceTime(handoff.offset_ms)}`),
       handoff.function_call ? element('span', 'status-tag', handoff.function_call.model_selected
-        ? `${handoff.backend_mode === 'jev' ? 'Jev 選択' : 'Function Calling'}: ${handoff.function_call.name}`
+        ? `${handoff.backend_mode === 'jev' ? t('Jev 選択') : 'Function Calling'}: ${handoff.function_call.name}`
         : `${backendLabel(handoff.backend_mode)} / ${handoff.function_call.status}`) : '',
       element('span', `status-tag ${['send_failed', 'rejected'].includes(handoff.status) ? 'failure' : ''}`,
         handoff.status));
     const body = element('div', 'handoff-body');
     if (handoff.backend_mode === 'responses') {
-      body.append(element('h4', '', 'Responses / 関数実行・送信状態'), element('pre', '', json({
+      body.append(element('h4', '', t('Responses / 関数実行・送信状態')), element('pre', '', json({
         response_id: handoff.response_id, backend: handoff.backend,
         function_calls: handoff.function_calls, commands: handoff.commands,
       })));
@@ -287,22 +291,22 @@ function renderState() {
       card.append(heading, body);
       return card;
     }
-    body.append(element('h4', '', 'このハンドオフで消費した SRT'),
-      element('pre', '', handoff.srt || '（未消費テキストなし）'));
+    body.append(element('h4', '', t('このハンドオフで消費した SRT')),
+      element('pre', '', handoff.srt || t('（未消費テキストなし）')));
     if (handoff.backend) {
-      body.append(element('h4', '', `${backendLabel(handoff.backend_mode)} / 判断・モデル応答と使用量`),
+      body.append(element('h4', '', t('{0} / 判断・モデル応答と使用量', backendLabel(handoff.backend_mode))),
         element('pre', '', json(handoff.backend)));
     }
     if (handoff.function_call) {
       body.append(
-        element('h4', '', '実際の関数呼び出し・引数・取得結果'),
+        element('h4', '', t('実際の関数呼び出し・引数・取得結果')),
         element('pre', '', json(handoff.function_call)),
       );
     }
     body.append(
-      element('h4', '', handoff.function_call ? '関数呼び出し → append コマンド' : '固定 stub コマンド（Jev・外部操作なし）'),
+      element('h4', '', handoff.function_call ? t('関数呼び出し → append コマンド') : t('固定 stub コマンド（Jev・外部操作なし）')),
       element('pre', '', json(handoff.command)),
-      element('p', '', '消費カーソルはネットワーク送信の成功を示しません。'));
+      element('p', '', t('消費カーソルはネットワーク送信の成功を示しません。')));
     if (handoff.error) body.append(element('p', '', handoff.error));
     card.append(heading, body);
     return card;
@@ -342,12 +346,12 @@ function logEvent(event, direction, note = '', adapted) {
   if (!rawEvents.slice(0, -1).length) $('timeline').replaceChildren();
   $('timeline').prepend(row);
   while ($('timeline').children.length > 200) $('timeline').lastElementChild.remove();
-  $('timeline-count').textContent = `${rawEvents.length} events · 表示は最新 200 件`;
+  $('timeline-count').textContent = t('{0} events · 表示は最新 200 件', rawEvents.length);
   $('event-count').textContent = String(incomingCount);
 }
 
 function request(type, fields = {}) {
-  if (socket?.readyState !== WebSocket.OPEN) return Promise.reject(new Error('観察サーバーが未接続です。リセットして再接続してください。'));
+  if (socket?.readyState !== WebSocket.OPEN) return Promise.reject(new Error(t('観察サーバーが未接続です。リセットして再接続してください。')));
   const request_id = `${epoch}:${crypto.randomUUID()}`;
   const span = operations.begin('inspector', `/ws ${type} / round trip`, {
     request_id, event_id: fields.event?.event_id ?? fields.event_id, type: fields.event?.type,
@@ -357,7 +361,7 @@ function request(type, fields = {}) {
     const timer = setTimeout(() => {
       pending.delete(request_id);
       operations.end(span, 'timeout');
-      reject(new Error('観察サーバーの応答がタイムアウトしました。'));
+      reject(new Error(t('観察サーバーの応答がタイムアウトしました。')));
     }, 10_000);
     pending.set(request_id, {
       span, timer,
@@ -382,10 +386,10 @@ function request(type, fields = {}) {
 async function connectInspector() {
   if (socket?.readyState === WebSocket.OPEN) return;
   await operations.measureAsync('inspector', 'Connect /ws', () => new Promise((resolve, reject) => {
-    const connection = new WebSocket(`${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws`);
+    const connection = new WebSocket(`${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws?lang=${language}`);
     socket = connection;
     let initialized = false;
-    const timeout = setTimeout(() => { connection.close(); reject(new Error('観察サーバーに接続できません。')); }, 10_000);
+    const timeout = setTimeout(() => { connection.close(); reject(new Error(t('観察サーバーに接続できません。'))); }, 10_000);
     connection.addEventListener('message', ({ data }) => {
       if (socket !== connection) return;
       try {
@@ -410,7 +414,7 @@ async function connectInspector() {
           if (!initialized) {
             initialized = true;
             clearTimeout(timeout);
-            $('connection-status').textContent = '観察サーバー接続済み';
+            $('connection-status').textContent = t('観察サーバー接続済み');
             $('connection-dot').classList.add('connected');
             resolve();
           }
@@ -427,34 +431,34 @@ async function connectInspector() {
       clearTimeout(timeout);
       if (socket !== connection) return;
       operations.mark('inspector', 'WebSocket closed', {}, { status: 'error' });
-      $('connection-status').textContent = '切断 · リセットで再接続';
+      $('connection-status').textContent = t('切断 · リセットで再接続');
       $('connection-dot').classList.remove('connected');
       for (const item of pending.values()) {
         clearTimeout(item.timer);
-        item.reject(new Error('観察サーバーとの接続が切れました。'));
+        item.reject(new Error(t('観察サーバーとの接続が切れました。')));
       }
       pending.clear();
       stopReplay();
       if (live) {
-        notice('観察接続が切れたため音声接続も終了しました。最終 usage は未確認です。');
+        notice(t('観察接続が切れたため音声接続も終了しました。最終 usage は未確認です。'));
         emergencyClose();
       }
-      if (!initialized) reject(new Error('観察サーバーに接続できません。'));
+      if (!initialized) reject(new Error(t('観察サーバーに接続できません。')));
       updateControls();
     });
-    connection.addEventListener('error', () => notice('WebSocket 接続エラー。サーバーの起動状態を確認してください。'));
+    connection.addEventListener('error', () => notice(t('WebSocket 接続エラー。サーバーの起動状態を確認してください。')));
   }));
 }
 
 async function handleCommand(command, protocol = 'client') {
   if (mode === 'replay') {
-    logEvent(command, 'outbound', '生成済み / Live 未送信。音声なし検証のため ACK・音声出力はありません。');
+    logEvent(command, 'outbound', t('生成済み / Live 未送信。音声なし検証のため ACK・音声出力はありません。'));
     await request('not_sent', { event_id: command.event_id });
     return;
   }
   if (!live?.ready || live.closing || sessionClosed || live.channel?.readyState !== 'open') {
     await request('send_failed', { event_id: command.event_id, detail: 'Live session is not ready or is closing.' });
-    notice('バックエンドの結果は未送信です。ライブ接続が準備できていません。');
+    notice(t('バックエンドの結果は未送信です。ライブ接続が準備できていません。'));
     return;
   }
   try {
@@ -464,17 +468,17 @@ async function handleCommand(command, protocol = 'client') {
     await request('send_failed', { event_id: command.event_id, detail: String(error) });
     throw error;
   }
-  logEvent(command, 'outbound', protocol === 'responses' ? '送信済み / Responses の完了は別途確認' : '実送信。受理の確認は別の ACK です。');
+  logEvent(command, 'outbound', protocol === 'responses' ? t('送信済み / Responses の完了は別途確認') : t('実送信。受理の確認は別の ACK です。'));
   if (protocol === 'responses') {
     await request('sent', { event_id: command.event_id });
     return;
   }
   ackTimers.set(command.event_id, setTimeout(() => {
     ackTimers.delete(command.event_id);
-    operations.mark('handoff', 'Append ACK 未確認', {
+    operations.mark('handoff', t('Append ACK 未確認'), {
       event_id: command.event_id, delegation_id: command.delegation_id,
     }, { status: 'timeout' });
-    notice('結果は送信しましたが、対応する ACK を確認できません。音声出力と API エラーを確認してください。');
+    notice(t('結果は送信しましたが、対応する ACK を確認できません。音声出力と API エラーを確認してください。'));
   }, 15_000));
   await request('sent', { event_id: command.event_id });
 }
@@ -488,12 +492,12 @@ function recordExecution(message) {
   if (message.provider === 'responses' && stage.startsWith('responses_')) {
     const responseKey = `${message.delegation_id}:responses`;
     const titles = {
-      responses_started: 'Responses 処理 / 文脈は GPT-Live が供給',
-      responses_round_completed: 'Responses 応答完了 / 関数要求または回答',
-      responses_command: message.command?.type === 'response.create' ? 'Responses の処理再開を送信' : '関数結果を Responses へ送信',
-      responses_continued: 'Responses の続行要求を送信済み',
-      responses_completed: 'Responses 完了 / 回答は Live に自動注入',
-      responses_failed: 'Responses 失敗 / 完了未確認',
+      responses_started: t('Responses 処理 / 文脈は GPT-Live が供給'),
+      responses_round_completed: t('Responses 応答完了 / 関数要求または回答'),
+      responses_command: message.command?.type === 'response.create' ? t('Responses の処理再開を送信') : t('関数結果を Responses へ送信'),
+      responses_continued: t('Responses の続行要求を送信済み'),
+      responses_completed: t('Responses 完了 / 回答は Live に自動注入'),
+      responses_failed: t('Responses 失敗 / 完了未確認'),
     };
     if (stage === 'responses_started' || stage === 'responses_continued') {
       operations.end(executionSpans.get(responseKey));
@@ -510,25 +514,25 @@ function recordExecution(message) {
     return;
   }
   if (stage === 'model_started') {
-    operations.mark('backend_request', `Ledger → ${message.model} / round ${message.model_round} / 送信開始`, detail,
+    operations.mark('backend_request', t('Ledger → {0} / round {1} / 送信開始', message.model, message.model_round), detail,
       { timing: 'browser / backend request notification (not an acceptance ACK)' });
     executionSpans.set(modelKey, operations.begin('backend_model',
-      `${backendLabel(message.provider)} ${message.model} / ${message.provider === 'jev' ? '候補判定' : message.model_round === 1 ? '関数選択' : '結果の回答作成'}`, { ...detail },
+      `${backendLabel(message.provider)} ${message.model} / ${message.provider === 'jev' ? t('候補判定') : message.model_round === 1 ? t('関数選択') : t('結果の回答作成')}`, { ...detail },
       { timing: 'browser / backend stage received' }));
   } else if (stage === 'model_completed') {
     operations.end(executionSpans.get(modelKey), 'ok', detail);
     executionSpans.delete(modelKey);
-    operations.mark('backend_response', `${message.model} / round ${message.model_round} / 応答受信`, detail);
+    operations.mark('backend_response', t('{0} / round {1} / 応答受信', message.model, message.model_round), detail);
   } else if (stage === 'decision_evaluated') {
     const decision = message.decision;
-    operations.mark('jev_decision', `Jev / ${decision.choice} / 信頼度 ${decision.confidence.toFixed(3)} / ${decision.approved ? '実行可' : '実行しない'}`,
+    operations.mark('jev_decision', t('Jev / {0} / 信頼度 {1} / {2}', decision.choice, decision.confidence.toFixed(3), decision.approved ? t('実行可') : t('実行しない')),
       detail, { status: decision.approved ? 'ok' : 'warning' });
   } else if (stage === 'function_requested') {
-    operations.mark('backend_tools', `${message.provider === 'jev' ? 'Jev 選択 → 検証済み引数' : 'Function Calling'} / ${message.function_name}`, detail);
+    operations.mark('backend_tools', `${message.provider === 'jev' ? t('Jev 選択 → 検証済み引数') : 'Function Calling'} / ${message.function_name}`, detail);
   } else if (stage === 'function_output') {
-    operations.mark('function_result', 'function_call_output → Azure OpenAI のモデル', detail);
+    operations.mark('function_result', t('function_call_output → Azure OpenAI のモデル'), detail);
   } else if (stage === 'result_formatted') {
-    operations.mark('backend_reply', '実結果をコードで日本語に整形（追加推論なし）', detail);
+    operations.mark('backend_reply', t('実結果をコードで日本語に整形（追加推論なし）'), detail);
   } else if (stage === 'backend_failed') {
     for (const [key, span] of executionSpans) {
       if (span.detail.delegation_id === message.delegation_id) {
@@ -536,39 +540,39 @@ function recordExecution(message) {
         executionSpans.delete(key);
       }
     }
-    operations.mark('backend_model', `${backendLabel(message.provider)} バックエンド失敗`, detail, { status: 'error' });
+    operations.mark('backend_model', t('{0} バックエンド失敗', backendLabel(message.provider)), detail, { status: 'error' });
     notice(message.error);
   } else if (stage === 'function_started') {
-    const span = operations.begin('function_call', `${message.function_name} / 実関数`, detail,
+    const span = operations.begin('function_call', t('{0} / 実関数', message.function_name), detail,
       { timing: 'browser / backend stage received' });
     executionSpans.set(functionKey, span);
   } else if (stage === 'function_completed' || stage === 'function_failed') {
     operations.end(executionSpans.get(functionKey), stage === 'function_failed' ? 'error' : 'ok', detail);
     executionSpans.delete(functionKey);
-    operations.mark('function_result', stage === 'function_completed' ? '関数の実行結果' : '関数の実行失敗',
+    operations.mark('function_result', stage === 'function_completed' ? t('関数の実行結果') : t('関数の実行失敗'),
       detail, { status: stage === 'function_failed' ? 'error' : 'ok' });
     if (stage === 'function_failed') notice(message.error);
   } else {
     operations.mark(stage === 'result_ready' ? 'backend_reply' : 'backend_context', {
-      context: 'Ledger SRT の準備（未送信）',
-      awaiting_transcript: '発話未到着 / 最大 2 秒待機',
-      result_ready: '実行結果 → session.commentary.append',
-      superseded: '新しい委譲を優先 / 古い結果は送信しない',
-      no_function_call: '確認回答 / 関数呼び出しなし',
+      context: t('Ledger SRT の準備（未送信）'),
+      awaiting_transcript: t('発話未到着 / 最大 2 秒待機'),
+      result_ready: t('実行結果 → session.commentary.append'),
+      superseded: t('新しい委譲を優先 / 古い結果は送信しない'),
+      no_function_call: t('確認回答 / 関数呼び出しなし'),
     }[stage] ?? stage, detail);
   }
 }
 
 async function ingest(raw, note = '') {
-  if (incomingCount >= (config?.max_events ?? 5000)) throw new Error('イベント上限に達しました。JSON を保存してリセットしてください。');
+  if (incomingCount >= (config?.max_events ?? 5000)) throw new Error(t('イベント上限に達しました。JSON を保存してリセットしてください。'));
   const event = operations.measure('input', 'normalize event_id', () => adaptEvent(raw), {
     event_id: raw.event_id, type: raw.type,
   });
   incomingCount += 1;
   logEvent(raw, 'inbound', event._lab_generated_event_id
-    ? `${note} server event_id なし → ローカル受信 ID: ${event.event_id}` : note, event);
+    ? t('{0} server event_id なし → ローカル受信 ID: {1}', note, event.event_id) : note, event);
   if (GROUPER_TYPES.has(event.type)) {
-    if (grouperClosed) throw new Error('Grouper は閉じています。リセットしてください。');
+    if (grouperClosed) throw new Error(t('Grouper は閉じています。リセットしてください。'));
     grouper.push(event);
     if (event.type === 'session.closed') grouperClosed = true;
   }
@@ -601,6 +605,7 @@ function updateControls() {
   $('stop-live').disabled = !active || live?.closing;
   $('mute').disabled = !live?.ready || live.closing;
   $('instructions').disabled = active;
+  $('language-toggle').disabled = active;
   $('consume').disabled = responsesMode() || !connected || busy || active || playing || state.closed || !state.pending_srt;
   $('playground-enabled').disabled = !connected || busy || configuringPlayground || state.closed;
   $('playground-backend').disabled = responsesMode() || !connected || busy || playing || configuringPlayground || state.closed || executing;
@@ -618,12 +623,12 @@ function stopReplay() {
   operations.end(replayWait, 'cancelled');
   replayWait = null;
   playing = false;
-  $('playback-status').textContent = sessionClosed ? '再生完了' : '停止中 · SDK のタイマーは進みます';
+  $('playback-status').textContent = sessionClosed ? t('再生完了') : t('停止中 · SDK のタイマーは進みます');
   updateControls();
 }
 
 async function reset() {
-  if (live) throw new Error('ライブ接続を終了してからリセットしてください。');
+  if (live) throw new Error(t('ライブ接続を終了してからリセットしてください。'));
   stopReplay();
   busy = true;
   updateControls();
@@ -650,11 +655,11 @@ async function reset() {
     makeGrouper();
     operations.mark('inspector', 'Inspector ready / reset complete');
     traceView.reset();
-    $('timeline').replaceChildren(element('p', 'empty-text', 'イベントを待っています。'));
+    $('timeline').replaceChildren(element('p', 'empty-text', t('イベントを待っています。')));
     $('timeline-count').textContent = '0 events';
     $('event-count').textContent = '0';
-    $('usage').textContent = '（まだセッションは閉じていません）';
-    $('playback-status').textContent = '準備完了';
+    $('usage').textContent = t('（まだセッションは閉じていません）');
+    $('playback-status').textContent = t('準備完了');
     $('scenario-description').textContent = scenario().description;
     $('scenario-expect').textContent = scenario().expect;
     renderGrouper();
@@ -686,10 +691,10 @@ async function applyPlayground() {
 }
 
 async function runPlayground() {
-  if (responsesMode()) throw new Error('Responses delegation はライブ接続で実行してください。');
-  if (live) throw new Error('音声接続中です。マイクで依頼するか、接続を終了してから音声なしで検証してください。');
+  if (responsesMode()) throw new Error(t('Responses delegation はライブ接続で実行してください。'));
+  if (live) throw new Error(t('音声接続中です。マイクで依頼するか、接続を終了してから音声なしで検証してください。'));
   const utterance = $('playground-utterance').value.trim();
-  if (!utterance || utterance.length > 300) throw new Error('検証用の発話を 1 ～ 300 文字で入力してください。');
+  if (!utterance || utterance.length > 300) throw new Error(t('検証用の発話を 1 ～ 300 文字で入力してください。'));
   await switchMode('replay');
   busy = true;
   updateControls();
@@ -697,16 +702,16 @@ async function runPlayground() {
     const id = crypto.randomUUID();
     inputStarted = true;
     await ingest({ type: 'session.started', event_id: `local_start_${id}`, session: { id: 'local_weather' } },
-      '合成セッション。Live API 接続ではありません。');
+      t('合成セッション。Live API 接続ではありません。'));
     await ingest({
       type: 'session.input_transcript.delta', event_id: `local_input_${id}`,
       delta: utterance, start_ms: 0, end_ms: 1000,
-    }, '画面入力から作った合成 transcript。関数と天気 HTTP は実行します。');
+    }, t('画面入力から作った合成 transcript。関数と天気 HTTP は実行します。'));
     await ingest({
       type: 'session.delegation.created', event_id: `local_delegate_${id}`, offset_ms: 1000,
       delegation: { id: `local_delegation_${id}`, type: 'delegation', target: 'client' },
-    }, '検証用の合成 delegation。実行結果を Live API へは送りません。');
-    $('playback-status').textContent = `${backendLabel(state.playground?.backend)} → 判断・関数実行中 / Live 音声なし`;
+    }, t('検証用の合成 delegation。実行結果を Live API へは送りません。'));
+    $('playback-status').textContent = t('{0} → 判断・関数実行中 / Live 音声なし', backendLabel(state.playground?.backend));
     traceView.focusFlow();
   } finally {
     busy = false;
@@ -720,13 +725,13 @@ async function nextStep() {
   try {
     if (!inputStarted) { makeGrouper(); inputStarted = true; }
     const entry = scenario().events[cursor];
-    if (!entry) throw new Error('シナリオは完了しています。リセットしてください。');
+    if (!entry) throw new Error(t('シナリオは完了しています。リセットしてください。'));
     operations.mark('replay', `Replay step ${cursor + 1}`, {
       scheduled_arrival_ms: entry.arrival_ms, note: entry.note,
     });
     await ingest(entry.event, entry.note);
     cursor += 1;
-    $('playback-status').textContent = sessionClosed ? '再生完了' : 'ステップ完了 · SDK タイマーは進行中';
+    $('playback-status').textContent = sessionClosed ? t('再生完了') : t('ステップ完了 · SDK タイマーは進行中');
   } finally {
     busy = false;
     updateControls();
@@ -785,7 +790,7 @@ function waveformFailure(run, error) {
   run.waveformFailed = true;
   run.waveforms?.stop().catch(report);
   $('resume-waveforms').hidden = true;
-  report(new Error(`音声波形を計測できません: ${error.message ?? String(error)}。音声接続は継続します。`));
+  report(new Error(t('音声波形を計測できません: {0}。音声接続は継続します。', error.message ?? String(error))));
 }
 
 async function attachWaveform(run, channel, stream) {
@@ -809,12 +814,12 @@ function emergencyClose() {
       const command = { type: 'session.close' };
       operations.measure('command', 'Emergency session.close', () =>
         run.channel.send(JSON.stringify(command)));
-      logEvent(command, 'outbound', '緊急終了。最終 usage は未確認です。');
+      logEvent(command, 'outbound', t('緊急終了。最終 usage は未確認です。'));
     }
   } catch (error) {
     report(error);
   } finally {
-    if (run) $('live-status').textContent = '接続終了 · 最終 usage は未確認';
+    if (run) $('live-status').textContent = t('接続終了 · 最終 usage は未確認');
     cleanupLive(run);
   }
 }
@@ -825,15 +830,15 @@ async function startLive() {
   const run = { abort: new AbortController(), ready: false, closing: false };
   live = run;
   run.startSpan = operations.begin('transport', 'Live startup / waiting for session.started');
-  $('live-status').textContent = '接続準備中…';
+  $('live-status').textContent = t('接続準備中…');
   updateControls();
   run.startTimer = setTimeout(() => {
     operations.end(run.startSpan, 'timeout');
-    notice('接続開始がタイムアウトしました。初期化課金が発生している可能性があります。');
+    notice(t('接続開始がタイムアウトしました。初期化課金が発生している可能性があります。'));
     emergencyClose();
   }, 60_000);
   try {
-    if (!navigator.mediaDevices?.getUserMedia) throw new Error('HTTPS または localhost とマイク対応ブラウザーが必要です。');
+    if (!navigator.mediaDevices?.getUserMedia) throw new Error(t('HTTPS または localhost とマイク対応ブラウザーが必要です。'));
     run.microphone = await operations.measureAsync('audio', 'getUserMedia / permission', () =>
       navigator.mediaDevices.getUserMedia({ audio: true }));
     if (live !== run) { run.microphone.getTracks().forEach((track) => track.stop()); return; }
@@ -850,7 +855,7 @@ async function startLive() {
       }
       operations.measureAsync('audio', 'HTMLMediaElement.play', () => $('remote-audio').play()).catch(() => {
         $('resume-audio').hidden = false;
-        notice('音声の自動再生がブロックされました。「音声を再生」を押してください。');
+        notice(t('音声の自動再生がブロックされました。「音声を再生」を押してください。'));
       });
     });
     run.peer.addEventListener('connectionstatechange', () => {
@@ -858,7 +863,7 @@ async function startLive() {
       operations.mark('transport', `Peer connection: ${run.peer.connectionState}`, {},
         { status: ['failed', 'disconnected'].includes(run.peer.connectionState) ? 'error' : 'ok' });
       if (['failed', 'disconnected'].includes(run.peer.connectionState)) {
-        notice('音声接続が切れました。最終 usage は未確認です。');
+        notice(t('音声接続が切れました。最終 usage は未確認です。'));
         emergencyClose();
       }
     });
@@ -875,7 +880,7 @@ async function startLive() {
           run.sessionSpan = operations.begin('transport', 'Live session active', { session_id: event.session?.id });
           clearTimeout(run.startTimer);
           run.ready = true;
-          $('live-status').textContent = `接続済み · ${event.session?.id ?? ''}`;
+          $('live-status').textContent = t('接続済み · {0}', event.session?.id ?? '');
           updateControls();
         }
         // Feed the SDK immediately: a local server round trip must not alter its 50 ms settle window.
@@ -886,7 +891,7 @@ async function startLive() {
             if (!run.ready) emergencyClose();
           }
           if (event.type === 'session.closed') {
-            $('live-status').textContent = '接続終了 · 最終 usage を受信';
+            $('live-status').textContent = t('接続終了 · 最終 usage を受信');
             cleanupLive(run);
           }
         }).catch((error) => { report(error); emergencyClose(); });
@@ -898,7 +903,7 @@ async function startLive() {
       // Let already-received session.closed finish its local Ledger round trip.
       eventQueue.then(() => {
         if (live === run) {
-          notice('イベント接続が切れました。最終 usage は未確認です。');
+          notice(t('イベント接続が切れました。最終 usage は未確認です。'));
           cleanupLive(run);
         }
       });
@@ -906,19 +911,21 @@ async function startLive() {
     run.channel.addEventListener('error', () => {
       if (live === run) {
         operations.mark('transport', 'RTCDataChannel error', {}, { status: 'error' });
-        notice('音声イベントチャネルでエラーが発生しました。'); emergencyClose();
+        notice(t('音声イベントチャネルでエラーが発生しました。')); emergencyClose();
       }
     });
     await operations.measureAsync('transport', 'SDP createOffer / setLocalDescription', async () =>
       run.peer.setLocalDescription(await run.peer.createOffer()));
     await operations.measureAsync('transport', 'ICE gathering', () => waitForIce(run.peer, run.abort.signal));
     const sdp = run.peer.localDescription?.sdp;
-    if (!sdp) throw new Error('SDP offer を作成できませんでした。');
-    $('live-status').textContent = '認証・セッション作成中…';
+    if (!sdp) throw new Error(t('SDP offer を作成できませんでした。'));
+    $('live-status').textContent = t('認証・セッション作成中…');
     const result = await operations.measureAsync('transport', 'POST /api/session', async (span) => {
       const response = await fetch('/api/session', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sdp, instructions: $('instructions').value, delegation_mode: $('delegation-mode').value }),
+        body: JSON.stringify({
+          sdp, instructions: $('instructions').value, delegation_mode: $('delegation-mode').value, language,
+        }),
         signal: run.abort.signal,
       });
       operations.server(parseServerTiming(response.headers.get('Server-Timing')), span);
@@ -933,11 +940,11 @@ async function startLive() {
     if (live !== run) return;
     await operations.measureAsync('transport', 'SDP setRemoteDescription', () =>
       run.peer.setRemoteDescription({ type: 'answer', sdp: result.transport.sdp }));
-    if (!run.ready) $('live-status').textContent = `session.started 待機中 · ${result.session.id}`;
+    if (!run.ready) $('live-status').textContent = t('session.started 待機中 · {0}', result.session.id);
   } catch (error) {
     if (live === run) {
       operations.end(run.startSpan, 'error');
-      $('live-status').textContent = '接続に失敗しました';
+      $('live-status').textContent = t('接続に失敗しました');
       report(error);
       cleanupLive(run);
     }
@@ -948,9 +955,9 @@ function stopLive() {
   const run = live;
   if (!run) return;
   if (!run.ready || run.channel?.readyState !== 'open') {
-    notice('接続準備を中止しました。セッション作成済みの場合は初期化課金が発生する可能性があります。');
+    notice(t('接続準備を中止しました。セッション作成済みの場合は初期化課金が発生する可能性があります。'));
     cleanupLive(run);
-    $('live-status').textContent = '接続準備を中止';
+    $('live-status').textContent = t('接続準備を中止');
     return;
   }
   run.closing = true;
@@ -964,18 +971,18 @@ function stopLive() {
     throw error;
   }
   logEvent(command, 'outbound');
-  $('live-status').textContent = 'session.closed を待機中…';
+  $('live-status').textContent = t('session.closed を待機中…');
   run.closeTimer = setTimeout(() => {
     operations.end(run.closeSpan, 'timeout');
-    notice('終了応答が 15 秒以内に届きませんでした。最終 usage は未確認です。');
-    $('live-status').textContent = '応答なしで接続終了 · 最終 usage は未確認';
+    notice(t('終了応答が 15 秒以内に届きませんでした。最終 usage は未確認です。'));
+    $('live-status').textContent = t('応答なしで接続終了 · 最終 usage は未確認');
     cleanupLive(run);
   }, 15_000);
   updateControls();
 }
 
 async function switchMode(next) {
-  if (next === 'replay' && responsesMode()) throw new Error('Responses delegation はライブ接続で実行してください。');
+  if (next === 'replay' && responsesMode()) throw new Error(t('Responses delegation はライブ接続で実行してください。'));
   mode = next;
   $('replay-controls').hidden = next !== 'replay';
   $('live-controls').hidden = next !== 'live';
@@ -986,7 +993,7 @@ async function switchMode(next) {
     $(`mode-${name}`).classList.toggle('active', name === next);
     $(`mode-${name}`).setAttribute('aria-pressed', String(name === next));
   }
-  $('source-badge').textContent = next === 'replay' ? 'SIMULATION · API 通信なし' : 'LIVE · 音声接続';
+  $('source-badge').textContent = next === 'replay' ? t('SIMULATION · API 通信なし') : t('LIVE · 音声接続');
   $('handoff-mode').textContent = next === 'replay' ? 'SIMULATED' : 'LIVE / STUB';
   await reset();
 }
@@ -1011,7 +1018,7 @@ bind('playground-run', runPlayground);
 bind('playground-timeline', () => traceView.focusFlow());
 $('delegation-mode').addEventListener('change', async () => {
   try {
-    if (live) throw new Error('接続を終了してから委譲モードを変更してください。');
+    if (live) throw new Error(t('接続を終了してから委譲モードを変更してください。'));
     if (responsesMode()) $('playground-backend').value = 'azure';
     await switchMode('live');
     document.querySelector(`button[data-view="${responsesMode() ? 'grouper' : 'compare'}"]`).click();
@@ -1035,6 +1042,17 @@ bind('open-settings', () => {
   $('session-settings').focus({ preventScroll: true });
 });
 bind('dismiss-notice', () => { $('notice').hidden = true; });
+// The toggle names the other language in that language so it can be found from either UI.
+const otherLanguage = language === 'en' ? 'ja' : 'en';
+$('language-toggle').textContent = otherLanguage === 'ja' ? '日本語' : 'English';
+$('language-toggle').lang = otherLanguage;
+$('language-toggle').setAttribute('aria-label', otherLanguage === 'ja' ? '日本語に切り替え' : 'Switch to English');
+$('language-toggle').title = $('language-toggle').getAttribute('aria-label');
+bind('language-toggle', () => {
+  if (live) throw new Error(t('接続を終了してから言語を切り替えてください。'));
+  if (rawEvents.length && !window.confirm(t('言語を切り替えるとページを再読み込みします。保存していない記録は失われます。切り替えますか？'))) return;
+  switchLanguage(otherLanguage);
+});
 bind('mute', () => {
   const tracks = live.microphone.getAudioTracks();
   const enabled = !tracks[0].enabled;
@@ -1095,18 +1113,18 @@ window.addEventListener('pagehide', () => {
 setInterval(renderDiagnostics, 100);
 
 async function initialize() {
-  const response = await fetch('/api/config');
-  if (!response.ok) throw new Error(`設定取得に失敗: HTTP ${response.status}`);
+  const response = await fetch(`/api/config?lang=${language}`);
+  if (!response.ok) throw new Error(t('設定取得に失敗: HTTP {0}', response.status));
   config = await response.json();
   if (config.playground_protocol !== 5) {
-    throw new Error('サーバーが旧版です。Python サーバーを再起動してページを再読み込みしてください。旧版では実関数を実行できません。');
+    throw new Error(t('サーバーが旧版です。Python サーバーを再起動してページを再読み込みしてください。旧版では実関数を実行できません。'));
   }
   $('playground-fields').disabled = false;
-  $('playground-cities').textContent = (config.weather_cities ?? []).join('・');
+  $('playground-cities').textContent = (config.weather_cities ?? []).join(t('・'));
   renderBackendConfiguration();
   $('instructions').value = config.instructions;
   $('key-status').textContent = config.config_error
-    ?? `${config.provider ?? 'openai'} · ${config.model} · ${config.auth_mode === 'entra' ? 'Azure CLI / Entra' : config.api_key_configured ? 'API key 設定済み' : 'API key 未設定'}`;
+    ?? `${config.provider ?? 'openai'} · ${config.model} · ${config.auth_mode === 'entra' ? 'Azure CLI / Entra' : config.api_key_configured ? t('API key 設定済み') : t('API key 未設定')}`;
   if (config.config_error) notice(config.config_error);
   await switchMode(mode);
 }

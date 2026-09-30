@@ -17,6 +17,13 @@
   color: var(--purple); background: var(--theme-button-bg);
 }
 .theme-toggle:hover { background: var(--theme-button-hover); }
+.language-toggle {
+  flex: none; min-width: 44px; height: 44px; padding: 0 12px;
+  border: 1px solid var(--line); border-radius: 9px;
+  color: var(--purple); background: var(--theme-button-bg); font-weight: 600;
+}
+.language-toggle:hover { background: var(--theme-button-hover); }
+.language-toggle:disabled { opacity: .5; cursor: not-allowed; }
 .theme-icon-light, :root[data-theme="dark"] .theme-icon-dark { display: none; }
 :root[data-theme="dark"] .theme-icon-light { display: block; }
 .theme-status { padding: 10px 36px; color: var(--muted); font-size: 12px; border-bottom: 1px solid var(--line); }

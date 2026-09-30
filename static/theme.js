@@ -3,6 +3,8 @@
   const root = document.documentElement;
   const system = window.matchMedia('(prefers-color-scheme: dark)');
   const validTheme = (value) => value === 'light' || value === 'dark';
+  // locale.js sets <html lang> before this script runs; Japanese is the default.
+  const english = () => root.lang === 'en';
   let preference = null;
   let storageMessage = '';
   let toggle;
@@ -11,7 +13,9 @@
   const storageFailure = (error) => {
     if (!(error instanceof DOMException)
       || !['SecurityError', 'QuotaExceededError'].includes(error.name)) throw error;
-    storageMessage = 'テーマ設定を保存できません。この画面では切り替えられますが、再読み込み後は引き継がれません。';
+    storageMessage = english()
+      ? 'The theme setting cannot be saved. You can switch it on this page, but it will not persist after reloading.'
+      : 'テーマ設定を保存できません。この画面では切り替えられますが、再読み込み後は引き継がれません。';
     console.warn('Theme preference storage is unavailable.', error);
   };
   try {
@@ -24,7 +28,10 @@
   const applyTheme = () => {
     root.dataset.theme = preference ?? (system.matches ? 'dark' : 'light');
     if (toggle) {
-      const label = root.dataset.theme === 'dark' ? 'ライトテーマに切り替え' : 'ダークテーマに切り替え';
+      const dark = root.dataset.theme === 'dark';
+      const label = english()
+        ? (dark ? 'Switch to light theme' : 'Switch to dark theme')
+        : (dark ? 'ライトテーマに切り替え' : 'ダークテーマに切り替え');
       toggle.setAttribute('aria-label', label);
       toggle.title = label;
       status.textContent = storageMessage;
