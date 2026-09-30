@@ -1,26 +1,26 @@
 # GPT-Live Transcript Lab
 
-**日本語** | [English](README.en.md)
+**English** | [日本語](README.ja.md)
 
-`gpt-live-1` の会話処理と天気検索の実行経路を可視化する、ローカル専用の Python Web UI です。
-画面と扱う会話は、日本語と英語を切り替えられます。
+A local-only Python web UI that visualizes `gpt-live-1` conversation processing and the execution path of a weather search.
+The UI and the conversation it handles can be switched between Japanese and English.
 
 ![](docs\images\gui.gif)
 
-## 機能概要
+## Features
 
-- 合成イベントのリプレイと、Azure OpenAI / OpenAI へのマイク接続。
-- Client delegation / Responses delegation の切替と、方式ごとの処理タイムライン。
-- TranscriptGrouper、Client モードの TranscriptLedger、音声波形の表示。
-- Function Calling / Jev 判断による天気検索と、記録の JSON 保存。Jev は Client モード専用です。
-- 日本語 / 英語の表示切り替え。音声指示・判断モデルへの指示・リプレイの会話・天気の要約も切り替わります。
+- Replay of synthetic events, and microphone connection to Azure OpenAI / OpenAI.
+- Switching between Client delegation and Responses delegation, with a processing timeline for each mode.
+- Display of the TranscriptGrouper, the TranscriptLedger (Client mode), and the audio waveform.
+- Weather search via Function Calling or a Jev decision, and saving the recording as JSON. Jev is Client mode only.
+- Japanese / English display language, including the voice instructions, prompts, replay conversations, and weather summaries.
 
-## 起動
+## Getting started
 
-Python 3.11 以上が必要です。ブラウザー用バンドルを同梱しているため、通常の起動に Node.js は不要です。
-このリポジトリのルートで実行してください。
+Python 3.11 or later is required. The browser bundle is prebuilt and included, so Node.js is not needed for normal use.
+Run the following commands at the root of this repository.
 
-### Windows（PowerShell）
+### Windows (PowerShell)
 
 ```powershell
 py -3 -m venv .venv
@@ -36,69 +36,69 @@ python3 -m venv .venv
 .venv/bin/python app.py
 ```
 
-ブラウザーで **http://localhost:8765** を開きます。ポートを変更する場合は起動コマンドに `--port 8875` を追加します。
+Open **http://localhost:8765** in your browser. To change the port, add `--port 8875` to the start command.
 
-**API なしで試す場合**：Client delegation を選び、「関数実行プレイグラウンド」の「天気検索を実行する」を OFF にしてから「リプレイ」を選びます。
-ON のままでは、リプレイでも判断 API の料金が発生し得ます。
+**To try it without an API**: select Client delegation, turn OFF "Run weather search" in the "Function execution playground", then select "Replay".
+If it stays ON, even a replay may incur charges for the decision API.
 
-## 表示言語
+## Display language
 
-右上の **English** / **日本語** ボタン、または **http://localhost:8765/?lang=en** で切り替えます。
-選択はブラウザーに保存し、未選択の場合はブラウザーの言語設定（`ja` なら日本語、それ以外は英語）に従います。
-切り替えるとページを再読み込みし、保存していない記録は失われます。ライブ接続中は切り替えられません。
-英語モードでは AI が英語で話し、"What's the weather in Tokyo right now?" のような英語の依頼を受け付けます。
-詳しくは [表示言語](docs/usage.md#表示言語)を参照してください。
+Use the **English** / **日本語** button in the upper right to switch languages, or open **http://localhost:8765/?lang=en**.
+The choice is remembered in the browser; without it, the browser language decides (Japanese for `ja`, otherwise English).
+Switching reloads the page and discards unsaved recordings, and it is disabled during a live connection.
+In English mode, the assistant speaks English, and the app expects English requests such as "What's the weather in Tokyo right now?".
+Details: [Display language](docs/usage.md#display-language).
 
-## 委譲モード
+## Delegation modes
 
-接続前に、画面上部の「委譲モード」で選択します。接続中は変更できません。
-**モードを変更すると記録がリセットされます。必要な記録は先に JSON 保存してください。**
+Select the mode with "Delegation mode" at the top of the screen before connecting. It cannot be changed while connected.
+**Changing the mode resets the recording. Save any recording you need as JSON first.**
 
-| モード | 文脈・判断 | 表示・制約 |
+| Mode | Context and decision | Display and constraints |
 | --- | --- | --- |
-| Client delegation | Ledger の会話をアプリが Function Calling または Jev へ送信 | Ledger、モデル判断、関数実行、commentary 送信・ACK。リプレイと音声なし実行も利用可能 |
-| Responses + Function Calling | GPT-Live が Responses モデルへ会話文脈を供給 | Ledger は生成・使用しない。Responses イベント、関数実行、結果送信、明示的続行、完了・失敗。ライブ専用 |
+| Client delegation | The app sends the Ledger conversation to Function Calling or Jev | Ledger, model decision, function execution, commentary send/ACK. Replay and runs without audio are also available |
+| Responses + Function Calling | GPT-Live supplies the conversation context to the Responses model | The Ledger is neither created nor used. Responses events, function execution, result submission, explicit continuation, completion/failure. Live only |
 
-Responses モードでも関数の検証・実行はアプリが担当します。結果を `response.item.create` で返し、`response.create` で続行します。
-検索 OFF は天気関数の実行を止める設定です。音声セッションと Responses モデルの料金は OFF でも発生し得ます。
-詳しくは [委譲モードの操作ガイド](docs/usage.md#委譲モード)と [公式仕様](https://learn.microsoft.com/azure/foundry/openai/how-to/gpt-live-delegation)を参照してください。
+Even in Responses mode, the app validates and executes functions. It returns the result with `response.item.create` and continues with `response.create`.
+Search OFF only stops execution of the weather function. The voice session and the Responses model may still incur charges when it is OFF.
+For details, see the [delegation mode guide](docs/usage.md#delegation-mode) and the [official specification](https://learn.microsoft.com/azure/foundry/openai/how-to/gpt-live-delegation).
 
-## API 接続設定
+## API connection settings
 
-実 API を使う場合のみ、[.env.example](.env.example) を参考にルートへ `.env` を作成します。
-既存の環境変数が優先されます。設定変更後はサーバーを再起動してください。
+Only if you use a real API, create `.env` at the root based on [.env.example](.env.example).
+Existing environment variables take precedence. Restart the server after changing settings.
 
-| 用途 | 設定 |
+| Purpose | Settings |
 | --- | --- |
-| Azure のライブ音声 | `LIVE_PROVIDER=azure`、`AZURE_OPENAI_ENDPOINT`、`AZURE_OPENAI_DEPLOYMENT` |
-| OpenAI のライブ音声 | `LIVE_PROVIDER=openai`、`OPENAI_API_KEY` |
-| Client + Function Calling | Azure の接続設定と `AZURE_OPENAI_BACKEND_DEPLOYMENT`（既定 `gpt-6-luna`） |
-| Client + Jev 判断 | `TYPESAFE_API_KEY`。任意で `TYPESAFE_MODEL`（既定 `jev-latest`）、`JEV_CONFIDENCE_THRESHOLD`（既定 `0.75`） |
-| Responses + Function Calling | ライブ接続設定と、任意の `LIVE_RESPONSES_MODEL`。Azure は同じリソース内のデプロイ名、OpenAI はモデル ID |
+| Azure live voice | `LIVE_PROVIDER=azure`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT` |
+| OpenAI live voice | `LIVE_PROVIDER=openai`, `OPENAI_API_KEY` |
+| Client + Function Calling | Azure connection settings and `AZURE_OPENAI_BACKEND_DEPLOYMENT` (default `gpt-6-luna`) |
+| Client + Jev decision | `TYPESAFE_API_KEY`. Optionally `TYPESAFE_MODEL` (default `jev-latest`) and `JEV_CONFIDENCE_THRESHOLD` (default `0.75`) |
+| Responses + Function Calling | Live connection settings and an optional `LIVE_RESPONSES_MODEL`: a deployment name in the same resource for Azure, or a model ID for OpenAI |
 
-Azure は `AZURE_OPENAI_API_KEY`、または `az login` 済みの Azure CLI アカウントを使います。
-後者には対象リソースの `Cognitive Services OpenAI User` 権限が必要です。
-Client モードの Function Calling は音声の接続先にかかわらず Azure の `gpt-6-luna` 系デプロイを使用します。
-Responses モードのモデルを省略した場合、Azure では `AZURE_OPENAI_BACKEND_DEPLOYMENT`（既定 `gpt-6-luna`）、OpenAI では `gpt-5.5` を使います。接続先でのモデルの提供状況・利用権限は別途確認してください。
-ライブ音声にはモデルの利用権限とブラウザーのマイク許可が必要です。
-詳細は [接続設定](docs/usage.md#接続設定)と [Azure の公式手順](https://learn.microsoft.com/azure/foundry/openai/how-to/gpt-live-webrtc)を参照してください。
+Azure uses `AZURE_OPENAI_API_KEY` or an Azure CLI account signed in with `az login`.
+The latter requires the `Cognitive Services OpenAI User` role on the target resource.
+Function Calling in Client mode uses an Azure `gpt-6-luna` deployment regardless of the voice provider.
+If the Responses mode model is omitted, Azure uses `AZURE_OPENAI_BACKEND_DEPLOYMENT` (default `gpt-6-luna`) and OpenAI uses `gpt-5.5`. Check model availability and access permissions with your provider separately.
+Live voice requires model access permissions and browser microphone permission.
+For details, see [Connection settings](docs/usage.md#connection-settings) and the [official Azure instructions](https://learn.microsoft.com/azure/foundry/openai/how-to/gpt-live-webrtc).
 
-## 構成
+## Structure
 
-| パス | 役割 |
+| Path | Role |
 | --- | --- |
-| [app.py](app.py) | HTTP / WebSocket サーバー、音声セッションの作成 |
-| [lab/](lab/) | 会話状態、認証、判断モデル、天気検索、表示言語 |
-| [static/](static/) | ブラウザー UI、英訳辞書、ビルド済みバンドル |
-| [frontend/](frontend/)・[scripts/](scripts/) | バンドルの入口、ビルド・配布処理 |
-| [vendor/](vendor/) | 公式ヘルパーの固定版とライセンス |
-| [tests/](tests/) | Python / Node.js のテスト |
-| [docs/](docs/) | 操作ガイド・詳細仕様 |
+| [app.py](app.py) | HTTP / WebSocket server, voice session creation |
+| [lab/](lab/) | Conversation state, authentication, decision models, weather search, language selection |
+| [static/](static/) | Browser UI, English dictionary, and prebuilt bundle |
+| [frontend/](frontend/), [scripts/](scripts/) | Bundle entry point, build and packaging scripts |
+| [vendor/](vendor/) | Pinned copies of official helpers and their licenses |
+| [tests/](tests/) | Python / Node.js tests |
+| [docs/](docs/) | Usage guide and detailed specification |
 
-## ドキュメント
+## Documentation
 
-- [操作ガイド・詳細仕様・開発手順](docs/usage.md)
-- [セキュリティ・データの取り扱い](SECURITY.md)
+- [Usage guide, detailed specification, and development steps](docs/usage.md)
+- [Security and data handling](SECURITY.md)
 
-**インターネットや LAN にサーバーを公開しないでください。** 実 API は有料です。
-自作部分のライセンスは未指定です。同梱コードの条件は [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)を参照してください。
+**Do not expose the server to the internet or a LAN.** The real APIs are paid services.
+The license for the original parts is unspecified. For the terms of bundled code, see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
