@@ -5,7 +5,7 @@
 A local-only Python web UI that visualizes `gpt-live-1` conversation processing and the execution path of a weather search.
 The UI and the conversation it handles can be switched between Japanese and English.
 
-![](docs\images\gui.gif)
+![GPT-Live Transcript Lab demo](docs/images/gui.gif)
 
 ## Features
 

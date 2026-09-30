@@ -5,7 +5,7 @@
 `gpt-live-1` の会話処理と天気検索の実行経路を可視化する、ローカル専用の Python Web UI です。
 画面と扱う会話は、日本語と英語を切り替えられます。
 
-![](docs\images\gui.gif)
+![GPT-Live Transcript Lab のデモ](docs/images/gui.gif)
 
 ## 機能概要
 
